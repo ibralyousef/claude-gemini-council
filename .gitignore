@@ -1,0 +1,21 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Session files (user-specific)
+council/sessions/*.md
+!council/sessions/.gitkeep
+
+# Backup files
+*.bak
+
+# Editor files
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Claude plans (personal)
+.claude/plans/
