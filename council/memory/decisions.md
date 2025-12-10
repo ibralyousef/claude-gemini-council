@@ -43,3 +43,16 @@ Each entry follows this structure:
 - **Rounds to Consensus**: 2
 - **Action Items**: (1) Make terminal optional with flag, (2) Add inline escalation fallback, (3) Implement quiet mode default
 
+
+## 2025-12-11 - Council Implementation Self-Review (Adversarial)
+- **Topic**: Do you like the current implementation of the council?
+- **Stance**: adversarial
+- **Decision**: Partial agreement - implementation has fixable bugs but disagreement on severity. Claude: "adequate for reference". Gemini: "NOT adequate, requires blocking remediation".
+- **Bugs Identified**:
+  1. P0 Security: CLI argument exposes context to process table - use stdin
+  2. P0 Data Integrity: grep -v "^$" destroys Markdown formatting - remove it
+  3. P0 Logic: Escalation response file not being read by Chair
+  4. P1 Scalability: ARG_MAX (1MB) limit on CLI args - fixed by stdin change
+- **Rationale**: Adversarial stress-testing successfully found real vulnerabilities in the implementation
+- **Dissent**: Gemini rejected "adequate" label; Claude maintained it's acceptable for development use
+- **Session**: council/sessions/2025-12-11-235500.md
