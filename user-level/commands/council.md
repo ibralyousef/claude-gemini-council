@@ -94,7 +94,13 @@ As the Chair of this council session, you MUST follow these rules:
    ---
    ```
 
-5. **Start the council session**: Announce the session with:
+5. **Launch terminal viewer**: Open a separate terminal window to show the session:
+   ```bash
+   ~/.claude/council/scripts/council-terminal.sh "council/sessions/current.md" "[topic]" "[stance]" "[rounds]"
+   ```
+   This opens a tmux split pane (if in tmux) or new Terminal window (on macOS) that shows the session log in real-time with colorized output.
+
+6. **Start the council session**: Announce the session with:
    ```
    === AI COUNCIL SESSION ===
    Topic: [topic]
@@ -102,7 +108,7 @@ As the Chair of this council session, you MUST follow these rules:
    Rounds: [N]
    ```
 
-6. **For each round**, do the following:
+7. **For each round**, do the following:
 
    a. **Claude's turn**: State your perspective on the topic
       - Be specific and actionable
@@ -161,7 +167,7 @@ As the Chair of this council session, you MUST follow these rules:
 
    h. **Continue** to the next round
 
-7. **After all rounds or RESOLVED status**, create a summary:
+8. **After all rounds or RESOLVED status**, create a summary:
    ```
    === COUNCIL SUMMARY ===
 
@@ -187,10 +193,10 @@ As the Chair of this council session, you MUST follow these rules:
    [synthesized recommendation combining both perspectives]
    ```
 
-8. **Finalize session log**: Append the summary to `current.md`, then rename it to:
+9. **Finalize session log**: Append the summary to `current.md`, then rename it to:
    `council/sessions/[YYYY-MM-DD-HHMMSS].md`
 
-9. **Update decisions log**: If a significant decision was reached, append to:
+10. **Update decisions log**: If a significant decision was reached, append to:
    `council/memory/decisions.md`
 
    Using this format:

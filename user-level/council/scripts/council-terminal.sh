@@ -9,6 +9,12 @@
 # - Press Enter to close when session ends
 
 SESSION_LOG="$1"
+
+# Convert to absolute path if relative (critical for new terminal windows)
+if [[ "$SESSION_LOG" != /* ]] && [[ -n "$SESSION_LOG" ]]; then
+    SESSION_LOG="$(pwd)/$SESSION_LOG"
+fi
+
 TOPIC="${2:-Council Session}"
 STANCE="${3:-balanced}"
 ROUNDS="${4:-3}"
@@ -96,27 +102,93 @@ run_terminal() {
     echo -e "${BOLD}────────────────────────────────────────────────────────────${NC}"
     echo ""
 
-    # Tail the log file and format output
-    tail -f "$SESSION_LOG" 2>/dev/null | format_output
+    # Use polling approach instead of tail -f (more reliable with file rewrites)
+    local last_lines=0
+    local escalation_triggered=0
+    while true; do
+        if [ -f "$SESSION_LOG" ]; then
+            local current_lines=$(wc -l < "$SESSION_LOG")
+            if [ "$current_lines" -gt "$last_lines" ]; then
+                # Display new lines and check for escalation
+                tail -n $((current_lines - last_lines)) "$SESSION_LOG" | while IFS= read -r line; do
+                    case "$line" in
+                        *"CLAUDE:"*|*"[CLAUDE]"*)
+                            echo -e "${GREEN}${line}${NC}"
+                            ;;
+                        *"GEMINI:"*|*"[GEMINI]"*)
+                            echo -e "${BLUE}${line}${NC}"
+                            ;;
+                        *"[ESCALATE]"*|*"[ESCALATION]"*)
+                            echo -e "${RED}${BOLD}${line}${NC}"
+                            # Signal escalation needed
+                            touch "${ESCALATION_FILE}.trigger"
+                            ;;
+                        *"==="*)
+                            echo -e "${YELLOW}${BOLD}${line}${NC}"
+                            ;;
+                        *"---"*"ROUND"*|*"Round"*)
+                            echo -e "${CYAN}${line}${NC}"
+                            ;;
+                        *"SESSION COMPLETE"*|*"RESOLVED"*)
+                            echo -e "${GREEN}${BOLD}${line}${NC}"
+                            ;;
+                        *)
+                            echo "$line"
+                            ;;
+                    esac
+                done
+                last_lines=$current_lines
+            fi
+
+            # Check if escalation was triggered
+            if [ -f "${ESCALATION_FILE}.trigger" ]; then
+                rm -f "${ESCALATION_FILE}.trigger"
+                echo ""
+                echo -e "${RED}╔════════════════════════════════════════════════════════════╗${NC}"
+                echo -e "${RED}║${NC}  ${BOLD}ESCALATION - User Input Required${NC}"
+                echo -e "${RED}╠════════════════════════════════════════════════════════════╣${NC}"
+                echo -e "${RED}║${NC}  The AIs need your input to continue."
+                echo -e "${RED}╚════════════════════════════════════════════════════════════╝${NC}"
+                echo ""
+                echo -e "${YELLOW}Your response (press Enter when done):${NC}"
+                read -r user_response
+                echo "$user_response" > "$ESCALATION_FILE"
+                echo -e "${GREEN}Response recorded. Session will continue...${NC}"
+                echo ""
+            fi
+        fi
+        sleep 0.5
+    done
 }
 
 # Function to open in tmux or new terminal
 open_terminal() {
-    local script_path="$0"
-    local args="\"$SESSION_LOG\" \"$TOPIC\" \"$STANCE\" \"$ROUNDS\""
+    local script_path
+    script_path="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
+
+    # Escape arguments for shell embedding
+    local escaped_log="${SESSION_LOG//\"/\\\"}"
+    local escaped_topic="${TOPIC//\"/\\\"}"
+    local escaped_stance="${STANCE//\"/\\\"}"
+    local escaped_rounds="${ROUNDS//\"/\\\"}"
 
     if command -v tmux &> /dev/null && [ -n "$TMUX" ]; then
         # Inside tmux - create split pane on the right (40% width)
-        tmux split-window -h -p 40 "$script_path $args; echo ''; echo -e '${GREEN}Session ended. Press Enter to close...${NC}'; read"
+        tmux split-window -h -p 40 "COUNCIL_TERMINAL_RUNNING=1 \"$script_path\" \"$escaped_log\" \"$escaped_topic\" \"$escaped_stance\" \"$escaped_rounds\"; echo ''; echo 'Session ended. Press Enter to close...'; read"
     elif [[ "$OSTYPE" == "darwin"* ]]; then
         # macOS - open new Terminal window
-        osascript -e "tell app \"Terminal\" to do script \"$script_path $args; echo ''; echo 'Session ended. Press Enter to close...'; read\""
+        osascript <<EOF
+tell application "Terminal"
+    activate
+    do script "COUNCIL_TERMINAL_RUNNING=1 '$script_path' '$escaped_log' '$escaped_topic' '$escaped_stance' '$escaped_rounds'; echo ''; echo 'Session ended. Press Enter to close...'; read"
+end tell
+EOF
     elif command -v gnome-terminal &> /dev/null; then
         # Linux with GNOME
-        gnome-terminal -- bash -c "$script_path $args; echo ''; echo 'Session ended. Press Enter to close...'; read"
+        gnome-terminal -- bash -c "COUNCIL_TERMINAL_RUNNING=1 \"$script_path\" \"$escaped_log\" \"$escaped_topic\" \"$escaped_stance\" \"$escaped_rounds\"; echo ''; echo 'Session ended. Press Enter to close...'; read"
     elif command -v xterm &> /dev/null; then
         # Fallback to xterm
-        xterm -e "$script_path $args; echo ''; echo 'Session ended. Press Enter to close...'; read" &
+        xterm -e "COUNCIL_TERMINAL_RUNNING=1 \"$script_path\" \"$escaped_log\" \"$escaped_topic\" \"$escaped_stance\" \"$escaped_rounds\"; echo ''; echo 'Session ended. Press Enter to close...'; read" &
     else
         # No GUI terminal available - run inline
         echo "No separate terminal available. Running inline..."

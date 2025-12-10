@@ -88,7 +88,13 @@ As the Chair of this consensus session, you MUST follow these rules:
    ---
    ```
 
-5. **Announce the session**:
+5. **Launch terminal viewer**: Open a separate terminal window to show the session:
+   ```bash
+   ~/.claude/council/scripts/council-terminal.sh "council/sessions/current.md" "[topic]" "[stance]" "10"
+   ```
+   This opens a tmux split pane (if in tmux) or new Terminal window (on macOS) that shows the session log in real-time with colorized output.
+
+6. **Announce the session**:
    ```
    === AI COUNCIL CONSENSUS SESSION ===
    Topic: [topic]
@@ -96,7 +102,7 @@ As the Chair of this consensus session, you MUST follow these rules:
    Mode: Continue until consensus (max 10 rounds)
    ```
 
-6. **For each round** (up to 10):
+7. **For each round** (up to 10):
 
    a. **Claude's turn**: State your position
       - In early rounds: Present your perspective clearly
@@ -155,7 +161,7 @@ As the Chair of this consensus session, you MUST follow these rules:
 
    i. **If no consensus**, continue to next round
 
-7. **On consensus OR max rounds**, create summary:
+8. **On consensus OR max rounds**, create summary:
    ```
    === CONSENSUS RESULT ===
 
@@ -176,10 +182,10 @@ As the Chair of this consensus session, you MUST follow these rules:
    [specific next steps based on consensus]
    ```
 
-8. **Finalize session log**: Append the summary to `current.md`, then rename it to:
+9. **Finalize session log**: Append the summary to `current.md`, then rename it to:
    `council/sessions/[YYYY-MM-DD-HHMMSS].md`
 
-9. **Update decisions log**: Append to:
+10. **Update decisions log**: Append to:
    `council/memory/decisions.md`
 
    Using this format:
