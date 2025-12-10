@@ -176,9 +176,12 @@ GEMINI_PROMPT
       Note: Prompt is passed via heredoc to stdin (avoids ARG_MAX limits). The 2nd argument specifies the output file.
 
    g. **Display Gemini's response** (if verbose mode):
+      - The invoke-gemini.sh script appends Gemini's response to the session file
+      - **IMPORTANT**: Do NOT rely on bash tool output display (it truncates long responses)
+      - Instead, output Gemini's response directly as text in your reply:
       ```
       --- ROUND [N]: GEMINI ---
-      [gemini's response]
+      [gemini's full response - display as direct text output, not via bash]
       ```
       In quiet mode, just show: `Round [N]: Gemini responded...`
 
