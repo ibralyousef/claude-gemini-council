@@ -1,7 +1,7 @@
 ---
 description: "Start AI Council session with Gemini for collaborative planning"
-allowed-tools: ["Bash", "Read", "Write", "Glob", "Grep"]
-argument-hint: "[level] [rounds] <topic to discuss>"
+allowed-tools: ["Bash", "Read", "Write", "Glob", "Grep", "AskUserQuestion"]
+argument-hint: "[--quiet] [level] [rounds] <topic to discuss>"
 ---
 
 # AI Council Session
@@ -10,17 +10,22 @@ You are starting an AI Council planning session with Gemini CLI. This is a colla
 
 ## Arguments
 Parse arguments in this order:
-1. **Stance/Level** (optional): cooperative | balanced | critical | adversarial (default: balanced)
-2. **Rounds** (optional): A number for how many rounds (default: 3)
-3. **Topic** (required): Everything else is the topic
+1. **Mode flag** (optional): `--quiet` to suppress verbose output (default: verbose/watch mode)
+2. **Stance/Level** (optional): cooperative | balanced | critical | adversarial (default: balanced)
+3. **Rounds** (optional): A number for how many rounds (default: 3)
+4. **Topic** (required): Everything else is the topic
 
 **Input received:** $ARGUMENTS
 
 **Examples:**
-- `/council adversarial 5 Should we rewrite in Rust?` → adversarial, 5 rounds
-- `/council critical How to handle auth?` → critical, 3 rounds (default)
-- `/council 3 API design review` → balanced (default), 3 rounds
-- `/council Should we use Redis?` → balanced, 3 rounds (defaults)
+- `/council adversarial 5 Should we rewrite in Rust?` → verbose, adversarial, 5 rounds
+- `/council --quiet critical How to handle auth?` → quiet mode, critical, 3 rounds
+- `/council 3 API design review` → verbose, balanced, 3 rounds
+- `/council Should we use Redis?` → verbose, balanced, 3 rounds (defaults)
+
+## Mode Behavior
+- **Default (verbose/watch)**: Display each round's Claude/Gemini exchange inline
+- **--quiet**: Only show progress updates and final summary (full log still written to file)
 
 ## Stance Levels
 - **cooperative**: Build on ideas, seek synthesis, gentle challenges
@@ -62,11 +67,12 @@ As the Chair of this council session, you MUST follow these rules:
 
 ## Instructions
 
-1. **Parse arguments**: Determine stance, rounds, and topic from the input
-   - Check if first word is a stance level (cooperative/balanced/critical/adversarial)
+1. **Parse arguments**: Determine mode, stance, rounds, and topic from the input
+   - Check if first word is `--quiet` (sets quiet mode)
+   - Check if next word is a stance level (cooperative/balanced/critical/adversarial)
    - Check if next word is a number (rounds)
    - Everything else is the topic
-   - Defaults: balanced stance, 3 rounds
+   - Defaults: verbose mode, balanced stance, 3 rounds
 
 2. **Initialize council structure** (if needed):
    - Check if `council/` directory exists in current project
@@ -98,11 +104,10 @@ As the Chair of this council session, you MUST follow these rules:
    ---
    ```
 
-5. **Launch terminal viewer**: Open a separate terminal window to show the session:
+5. **Update status-line**: Signal session start:
    ```bash
-   ~/.claude/council/scripts/council-terminal.sh "council/sessions/current.md" "[topic]" "[stance]" "[rounds]"
+   ~/.claude/council/scripts/council-status.sh "Council: Starting..."
    ```
-   This opens a tmux split pane (if in tmux) or new Terminal window (on macOS) that shows the session log in real-time with colorized output.
 
 6. **Start the council session**: Announce the session with:
    ```
@@ -110,26 +115,33 @@ As the Chair of this council session, you MUST follow these rules:
    Topic: [topic]
    Stance: [stance level]
    Rounds: [N]
+   Mode: [verbose/quiet]
    ```
 
 7. **For each round**, do the following:
 
    **State tracking**: Maintain a `consecutive_deadlock_count` variable, starting at 0.
 
-   a. **Claude's turn**: State your perspective on the topic
+   a. **Update status-line**:
+      ```bash
+      ~/.claude/council/scripts/council-status.sh "Council: Round [N]/[total]"
+      ```
+
+   b. **Claude's turn**: State your perspective on the topic
       - Be specific and actionable
       - Consider trade-offs
       - Build on previous discussion if not round 1
       - Include your confidence level (0.0-1.0) on your position
       - Match your argumentative intensity to the stance level
 
-   b. **Display your position** to the user with header:
+   c. **Display your position** (if verbose mode):
       ```
       --- ROUND [N]: CLAUDE ---
       [your position]
       ```
+      In quiet mode, just show: `Round [N]: Claude responded...`
 
-   c. **Append to session log**: Use bash to append your position directly to the session file:
+   d. **Append to session log**: Use bash to append your position directly to the session file:
       ```bash
       echo "### Round [N]
 
@@ -138,7 +150,12 @@ As the Chair of this council session, you MUST follow these rules:
       " >> council/sessions/current.md
       ```
 
-   d. **Invoke Gemini** with output file parameter (auto-appends to session log):
+   e. **Update status-line for Gemini**:
+      ```bash
+      ~/.claude/council/scripts/council-status.sh "Council: Waiting for Gemini..."
+      ```
+
+   f. **Invoke Gemini** with output file parameter (auto-appends to session log):
       ```bash
       ~/.claude/council/scripts/invoke-gemini.sh "You are Gemini participating in an AI Council session with Claude.
 
@@ -156,33 +173,40 @@ As the Chair of this council session, you MUST follow these rules:
       ```
       Note: The 3rd argument auto-appends Gemini's response to the session file.
 
-   e. **Display Gemini's response** with header:
+   g. **Display Gemini's response** (if verbose mode):
       ```
       --- ROUND [N]: GEMINI ---
       [gemini's response]
       ```
-      (The response is already logged to the file by invoke-gemini.sh)
+      In quiet mode, just show: `Round [N]: Gemini responded...`
 
-   g. **Parse STATUS field** and decide:
+   h. **Parse STATUS field** and decide:
       - If `RESOLVED` → proceed to summary
       - If `CONTINUE` → reset `consecutive_deadlock_count` to 0, proceed to next round
       - If `DEADLOCK`:
         - Increment `consecutive_deadlock_count`
         - If count < 2 → proceed to next round
-        - If count >= 2 → trigger escalation (see step h)
-      - If `ESCALATE` → trigger escalation (see step h)
+        - If count >= 2 → trigger escalation (see step i)
+      - If `ESCALATE` → trigger escalation (see step i)
 
-   h. **Escalation procedure** (when triggered by ESCALATE status or 2 consecutive deadlocks):
-      1. Append `[ESCALATE]` marker to session log:
+   i. **Escalation procedure** (when triggered by ESCALATE status or 2 consecutive deadlocks):
+      1. Update status-line:
          ```bash
-         echo "[ESCALATE]" >> council/sessions/current.md
+         ~/.claude/council/scripts/council-status.sh "Council: ESCALATION - Input needed"
          ```
-      2. Display to user: "Escalation triggered. Please provide input in the terminal window, then type 'continue' here when done."
-      3. **STOP and wait** for user to type "continue" (or similar confirmation) in the main chat
-      4. Read `council/sessions/escalation-response.txt` to get user's input
+      2. Append escalation marker to session log:
+         ```bash
+         echo "
+[ESCALATION TRIGGERED]
+" >> council/sessions/current.md
+         ```
+      3. **Use AskUserQuestion tool** to prompt the user directly:
+         - This forces a prompt even in auto-accept mode
+         - Ask: "The council needs your input to continue. What guidance do you want to provide?"
+      4. Append user's response to session log
       5. Incorporate user's input into next round, reset `consecutive_deadlock_count` to 0
 
-   i. **Continue** to the next round
+   j. **Continue** to the next round
 
 8. **After all rounds or RESOLVED status**, create a summary:
    ```
@@ -210,21 +234,35 @@ As the Chair of this council session, you MUST follow these rules:
    [synthesized recommendation combining both perspectives]
    ```
 
-9. **Finalize session log**: Append the summary to `current.md`, then rename it to:
-   `council/sessions/[YYYY-MM-DD-HHMMSS].md`
-
-10. **Update decisions log**: If a significant decision was reached, append to:
-   `council/memory/decisions.md`
-
-   Using this format:
-   ```markdown
-   ## [YYYY-MM-DD] - [Brief Topic]
-   - **Topic**: [full topic]
-   - **Stance**: [stance level used]
-   - **Decision**: [agreed outcome]
-   - **Rationale**: [why this was chosen]
-   - **Dissent**: [any unresolved disagreements]
+9. **Update status-line**:
+   ```bash
+   ~/.claude/council/scripts/council-status.sh "Council: Complete"
    ```
+
+10. **Prompt user for review**: Use AskUserQuestion tool to ask:
+    - "Council session complete. Review the decision and action items?"
+    - This forces the user to see the result even in auto-accept mode
+
+11. **Finalize session log**: Append the summary to `current.md`, then rename it to:
+    `council/sessions/[YYYY-MM-DD-HHMMSS].md`
+
+12. **Update decisions log**: If a significant decision was reached, append to:
+    `council/memory/decisions.md`
+
+    Using this format:
+    ```markdown
+    ## [YYYY-MM-DD] - [Brief Topic]
+    - **Topic**: [full topic]
+    - **Stance**: [stance level used]
+    - **Decision**: [agreed outcome]
+    - **Rationale**: [why this was chosen]
+    - **Dissent**: [any unresolved disagreements]
+    ```
+
+13. **Clear status-line**:
+    ```bash
+    ~/.claude/council/scripts/council-status.sh clear
+    ```
 
 ## Template Files (for initialization)
 
@@ -272,11 +310,14 @@ This file tracks key decisions made during council sessions.
 ```
 
 ## Important Notes
-- Stream each exchange in real-time so the user sees the conversation as it happens
+- Default mode is verbose (--watch) - shows each exchange inline
+- Use --quiet for minimal output (progress + final summary only)
+- Session log is always written to file regardless of mode
+- Use AskUserQuestion for escalation - this bypasses auto-accept mode
+- Use AskUserQuestion at session end - ensures user sees the result
 - Keep your positions concise but substantive
 - Actively engage with Gemini's counterpoints
 - Match your debate intensity to the stance level
 - The goal is better decisions through diverse perspectives
 - You are the Chair - maintain neutrality when summarizing
 - Preserve Gemini's exact words in the session log - never paraphrase
-- On ESCALATE status, pause everything and get user input before continuing
