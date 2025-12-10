@@ -56,3 +56,19 @@ Each entry follows this structure:
 - **Rationale**: Adversarial stress-testing successfully found real vulnerabilities in the implementation
 - **Dissent**: Gemini rejected "adequate" label; Claude maintained it's acceptable for development use
 - **Session**: council/sessions/2025-12-11-235500.md
+
+## 2025-12-11 - Council Implementation Adversarial Review II
+- **Topic**: Is the council implementation flawed or missing super important features for complex tasks?
+- **Stance**: adversarial
+- **Decision**: Two blocking P0 issues confirmed requiring immediate remediation:
+  1. **Transport Layer Broken**: CLI args for prompts will hit ARG_MAX (~262KB) before any context management runs. Fix requires file streaming to stdin, not just echo expansion.
+  2. **Memory System is Context Dumping**: Cat'ing entire decisions.md is O(N) resource leak. Must build intelligent retrieval BEFORE disabling context dump, or council becomes "lobotomized".
+- **Scope Boundary Established**: Council = Policy/Architecture DECISIONS (Senate role). Agent = Execution PLANS (General role). Council may output "agenda items" (sub-questions) but not step-by-step plans.
+- **Rationale**: Both issues were verified by code inspection. Gemini proved the prior "ARG_MAX fix" claim was misleading - only the internal Gemini CLI call uses stdin; the wrapper still takes CLI args.
+- **Dissent**: 
+  - Output validation: Claude says P1 (regex ok for personal use), Gemini says P0 (structured JSON required for automation)
+  - Security: Gemini maintains process table exposure is P0 even for personal tooling
+- **False Positives Identified**: Race condition claim was wrong - execution is strictly synchronous
+- **Rounds to Resolution**: 5
+- **Session**: council/sessions/2025-12-11-120000.md
+

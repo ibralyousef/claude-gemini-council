@@ -151,28 +151,30 @@ As the Chair of this consensus session, you MUST follow these rules:
 
    f. **Invoke Gemini** with output file parameter (auto-appends to session log):
       ```bash
-      ~/.claude/council/scripts/invoke-gemini.sh "You are Gemini in an AI Council CONSENSUS session with Claude.
+      ~/.claude/council/scripts/invoke-gemini.sh "[stance]" "council/sessions/current.md" << 'GEMINI_PROMPT'
+You are Gemini in an AI Council CONSENSUS session with Claude.
 
-      TOPIC: [topic]
-      ROUND: [N] of max 10
-      MODE: We continue until we reach consensus
+TOPIC: [topic]
+ROUND: [N] of max 10
+MODE: We continue until we reach consensus
 
-      CLAUDE'S CURRENT POSITION:
-      [your position]
+CLAUDE'S CURRENT POSITION:
+[your position]
 
-      FULL DISCUSSION SO FAR:
-      [summary of all previous exchanges]
+FULL DISCUSSION SO FAR:
+[summary of all previous exchanges]
 
-      YOUR TASK:
-      1. Respond to Claude's position according to your assigned stance
-      2. Identify areas of agreement
-      3. If you agree with Claude's overall approach, set STATUS: RESOLVED
-      4. If not, explain your concerns and suggest modifications
+YOUR TASK:
+1. Respond to Claude's position according to your assigned stance
+2. Identify areas of agreement
+3. If you agree with Claude's overall approach, set STATUS: RESOLVED
+4. If not, explain your concerns and suggest modifications
 
-      Remember to end with a COUNCIL_RESPONSE block.
-      We're looking for consensus - be constructive and solution-oriented." "[stance]" "council/sessions/current.md"
+Remember to end with a COUNCIL_RESPONSE block.
+We're looking for consensus - be constructive and solution-oriented.
+GEMINI_PROMPT
       ```
-      Note: The 3rd argument auto-appends Gemini's response to the session file.
+      Note: Prompt is passed via heredoc to stdin (avoids ARG_MAX limits). The 2nd argument specifies the output file.
 
    g. **Display Gemini's response** (if verbose mode):
       ```

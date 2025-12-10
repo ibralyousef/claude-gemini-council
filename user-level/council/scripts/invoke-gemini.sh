@@ -1,9 +1,12 @@
 #!/bin/bash
 # invoke-gemini.sh - Wrapper for Gemini CLI invocation with protocol injection
-# Usage: ./invoke-gemini.sh "prompt" [stance] [output_file]
+# Usage: echo "prompt" | ./invoke-gemini.sh [stance] [output_file]
+#        ./invoke-gemini.sh [stance] [output_file] < prompt.txt
+#
+# Prompt is read from STDIN (not CLI argument) to avoid ARG_MAX limits and
+# process table exposure of sensitive session content.
 #
 # Arguments:
-#   prompt - The prompt to send to Gemini
 #   stance - Optional: cooperative|balanced|critical|adversarial (default: balanced)
 #   output_file - Optional: File to append output to (in addition to stdout)
 #
@@ -36,10 +39,16 @@ PROJECT_COUNCIL_DIR="$PWD/council"
 MAX_RETRIES=3
 RETRY_DELAY=2
 
-# Get arguments
-PROMPT="$1"
-STANCE="${2:-balanced}"
-OUTPUT_FILE="$3"
+# Read prompt from stdin (avoids ARG_MAX and process table exposure)
+PROMPT=$(cat)
+STANCE="${1:-balanced}"
+OUTPUT_FILE="$2"
+
+# Validate input
+if [ -z "$PROMPT" ]; then
+    echo "[invoke-gemini.sh] ERROR: No prompt received on stdin" >&2
+    exit 1
+fi
 
 # Define stance instructions
 get_stance_instructions() {

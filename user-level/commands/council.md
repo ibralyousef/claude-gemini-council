@@ -157,21 +157,23 @@ As the Chair of this council session, you MUST follow these rules:
 
    f. **Invoke Gemini** with output file parameter (auto-appends to session log):
       ```bash
-      ~/.claude/council/scripts/invoke-gemini.sh "You are Gemini participating in an AI Council session with Claude.
+      ~/.claude/council/scripts/invoke-gemini.sh "[stance]" "council/sessions/current.md" << 'GEMINI_PROMPT'
+You are Gemini participating in an AI Council session with Claude.
 
-      TOPIC: [the topic]
-      ROUND: [current] of [total]
+TOPIC: [the topic]
+ROUND: [current] of [total]
 
-      CLAUDE'S POSITION:
-      [what you just said]
+CLAUDE'S POSITION:
+[what you just said]
 
-      PREVIOUS DISCUSSION:
-      [summary of earlier rounds if any]
+PREVIOUS DISCUSSION:
+[summary of earlier rounds if any]
 
-      Please provide your perspective according to your assigned stance. Be specific and actionable.
-      Remember to end with a COUNCIL_RESPONSE block." "[stance]" "council/sessions/current.md"
+Please provide your perspective according to your assigned stance. Be specific and actionable.
+Remember to end with a COUNCIL_RESPONSE block.
+GEMINI_PROMPT
       ```
-      Note: The 3rd argument auto-appends Gemini's response to the session file.
+      Note: Prompt is passed via heredoc to stdin (avoids ARG_MAX limits). The 2nd argument specifies the output file.
 
    g. **Display Gemini's response** (if verbose mode):
       ```
