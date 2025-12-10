@@ -162,9 +162,12 @@ while [ $attempt -le $MAX_RETRIES ]; do
         # Success - output the result (filter empty lines only)
         CLEANED_OUTPUT=$(echo "$OUTPUT" | grep -v "^$")
         echo "$CLEANED_OUTPUT"
-        # Also write to output file if specified
+        # Also write to output file if specified (with GEMINI: header)
         if [ -n "$OUTPUT_FILE" ]; then
-            echo "$CLEANED_OUTPUT" >> "$OUTPUT_FILE"
+            echo "
+**GEMINI:**
+$CLEANED_OUTPUT
+" >> "$OUTPUT_FILE"
         fi
         exit 0
     fi
