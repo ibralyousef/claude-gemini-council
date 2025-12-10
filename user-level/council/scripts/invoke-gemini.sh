@@ -1,10 +1,11 @@
 #!/bin/bash
 # invoke-gemini.sh - Wrapper for Gemini CLI invocation with protocol injection
-# Usage: ./invoke-gemini.sh "prompt" [stance]
+# Usage: ./invoke-gemini.sh "prompt" [stance] [output_file]
 #
 # Arguments:
 #   prompt - The prompt to send to Gemini
 #   stance - Optional: cooperative|balanced|critical|adversarial (default: balanced)
+#   output_file - Optional: File to append output to (in addition to stdout)
 #
 # Context injection order:
 # 1. ~/.claude/council/protocol.md - Universal instructions (always)
@@ -38,6 +39,7 @@ RETRY_DELAY=2
 # Get arguments
 PROMPT="$1"
 STANCE="${2:-balanced}"
+OUTPUT_FILE="$3"
 
 # Define stance instructions
 get_stance_instructions() {
@@ -158,7 +160,12 @@ while [ $attempt -le $MAX_RETRIES ]; do
 
     if [ $EXIT_CODE -eq 0 ] && [ -n "$OUTPUT" ]; then
         # Success - output the result (filter empty lines only)
-        echo "$OUTPUT" | grep -v "^$"
+        CLEANED_OUTPUT=$(echo "$OUTPUT" | grep -v "^$")
+        echo "$CLEANED_OUTPUT"
+        # Also write to output file if specified
+        if [ -n "$OUTPUT_FILE" ]; then
+            echo "$CLEANED_OUTPUT" >> "$OUTPUT_FILE"
+        fi
         exit 0
     fi
 

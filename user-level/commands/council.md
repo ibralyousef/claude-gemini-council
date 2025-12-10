@@ -123,14 +123,16 @@ As the Chair of this council session, you MUST follow these rules:
       [your position]
       ```
 
-   c. **Append to session log**: Write your position to `current.md`:
-      ```markdown
-      ### Round [N]
+   c. **Append to session log**: Use bash to append your position directly to the session file:
+      ```bash
+      echo "### Round [N]
+
       **CLAUDE:**
       [your position]
+      " >> council/sessions/current.md
       ```
 
-   d. **Invoke Gemini** using the invoke-gemini.sh script which handles protocol injection:
+   d. **Invoke Gemini** with output file parameter (auto-appends to session log):
       ```bash
       ~/.claude/council/scripts/invoke-gemini.sh "You are Gemini participating in an AI Council session with Claude.
 
@@ -144,20 +146,16 @@ As the Chair of this council session, you MUST follow these rules:
       [summary of earlier rounds if any]
 
       Please provide your perspective according to your assigned stance. Be specific and actionable.
-      Remember to end with a COUNCIL_RESPONSE block." "[stance]"
+      Remember to end with a COUNCIL_RESPONSE block." "[stance]" "council/sessions/current.md"
       ```
+      Note: The 3rd argument auto-appends Gemini's response to the session file.
 
    e. **Display Gemini's response** with header:
       ```
       --- ROUND [N]: GEMINI ---
       [gemini's response]
       ```
-
-   f. **Append Gemini's response verbatim to session log**:
-      ```markdown
-      **GEMINI:**
-      [exact response including COUNCIL_RESPONSE block]
-      ```
+      (The response is already logged to the file by invoke-gemini.sh)
 
    g. **Parse STATUS field** and decide:
       - If `RESOLVED` → proceed to summary

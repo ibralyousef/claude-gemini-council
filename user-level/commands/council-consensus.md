@@ -117,9 +117,16 @@ As the Chair of this consensus session, you MUST follow these rules:
       [your position]
       ```
 
-   c. **Append to session log**: Write your position to `current.md`
+   c. **Append to session log**: Use bash to append your position directly:
+      ```bash
+      echo "### Round [N]
 
-   d. **Invoke Gemini** using the invoke-gemini.sh script:
+      **CLAUDE:**
+      [your position]
+      " >> council/sessions/current.md
+      ```
+
+   d. **Invoke Gemini** with output file parameter (auto-appends to session log):
       ```bash
       ~/.claude/council/scripts/invoke-gemini.sh "You are Gemini in an AI Council CONSENSUS session with Claude.
 
@@ -140,16 +147,16 @@ As the Chair of this consensus session, you MUST follow these rules:
       4. If not, explain your concerns and suggest modifications
 
       Remember to end with a COUNCIL_RESPONSE block.
-      We're looking for consensus - be constructive and solution-oriented." "[stance]"
+      We're looking for consensus - be constructive and solution-oriented." "[stance]" "council/sessions/current.md"
       ```
+      Note: The 3rd argument auto-appends Gemini's response to the session file.
 
    e. **Display Gemini's response**:
       ```
       --- ROUND [N]: GEMINI ---
       [response]
       ```
-
-   f. **Append Gemini's response verbatim to session log**
+      (The response is already logged to the file by invoke-gemini.sh)
 
    g. **Parse STATUS field** and decide:
       - If `RESOLVED` → proceed to summary

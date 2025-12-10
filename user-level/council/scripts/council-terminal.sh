@@ -104,12 +104,12 @@ run_terminal() {
 
     # Use polling approach instead of tail -f (more reliable with file rewrites)
     local last_lines=0
-    local escalation_triggered=0
+    local session_complete=0
     while true; do
         if [ -f "$SESSION_LOG" ]; then
             local current_lines=$(wc -l < "$SESSION_LOG")
             if [ "$current_lines" -gt "$last_lines" ]; then
-                # Display new lines and check for escalation
+                # Display new lines and check for escalation/completion
                 tail -n $((current_lines - last_lines)) "$SESSION_LOG" | while IFS= read -r line; do
                     case "$line" in
                         *"CLAUDE:"*|*"[CLAUDE]"*)
@@ -122,6 +122,11 @@ run_terminal() {
                             echo -e "${RED}${BOLD}${line}${NC}"
                             # Signal escalation needed
                             touch "${ESCALATION_FILE}.trigger"
+                            ;;
+                        *"=== COUNCIL SUMMARY ==="*|*"=== CONSENSUS RESULT ==="*)
+                            echo -e "${YELLOW}${BOLD}${line}${NC}"
+                            # Signal session complete
+                            touch "${ESCALATION_FILE}.complete"
                             ;;
                         *"==="*)
                             echo -e "${YELLOW}${BOLD}${line}${NC}"
@@ -155,6 +160,21 @@ run_terminal() {
                 echo "$user_response" > "$ESCALATION_FILE"
                 echo -e "${GREEN}Response recorded. Session will continue...${NC}"
                 echo ""
+            fi
+
+            # Check if session is complete
+            if [ -f "${ESCALATION_FILE}.complete" ]; then
+                rm -f "${ESCALATION_FILE}.complete"
+                # Wait a moment for any remaining content to be displayed
+                sleep 1
+                echo ""
+                echo -e "${GREEN}╔════════════════════════════════════════════════════════════╗${NC}"
+                echo -e "${GREEN}║${NC}  ${BOLD}SESSION COMPLETE${NC}"
+                echo -e "${GREEN}╚════════════════════════════════════════════════════════════╝${NC}"
+                echo ""
+                echo -e "${CYAN}Press any key to close...${NC}"
+                read -n 1 -s
+                exit 0
             fi
         fi
         sleep 0.5
