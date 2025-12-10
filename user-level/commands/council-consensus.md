@@ -74,8 +74,12 @@ As the Chair of this consensus session, you MUST follow these rules:
    - `council/memory/patterns.md`
    Use this context to inform your positions.
 
-4. **Initialize session log**: Create session file at:
-   `council/sessions/current.md`
+4. **Initialize session log**:
+   - Check if `council/sessions/current.md` already exists
+   - If exists: Ask user "An active session exists. Resume it or start fresh?"
+     - Resume: Continue from existing file
+     - Fresh: Rename existing to `council/sessions/orphaned-[timestamp].md`, then create new
+   - If not exists: Create new session file at `council/sessions/current.md`
 
    With this header:
    ```markdown
@@ -103,6 +107,8 @@ As the Chair of this consensus session, you MUST follow these rules:
    ```
 
 7. **For each round** (up to 10):
+
+   **State tracking**: Maintain a `consecutive_deadlock_count` variable, starting at 0.
 
    a. **Claude's turn**: State your position
       - In early rounds: Present your perspective clearly
@@ -160,13 +166,26 @@ As the Chair of this consensus session, you MUST follow these rules:
 
    g. **Parse STATUS field** and decide:
       - If `RESOLVED` → proceed to summary
-      - If `ESCALATE` → write `[ESCALATE]` to log, ask user for input, then continue
-      - If `DEADLOCK` (2nd consecutive) → ask user for tiebreaker
-      - If `CONTINUE` or first `DEADLOCK` → next round
+      - If `CONTINUE` → reset `consecutive_deadlock_count` to 0, proceed to next round
+      - If `DEADLOCK`:
+        - Increment `consecutive_deadlock_count`
+        - If count < 2 → proceed to next round
+        - If count >= 2 → trigger escalation (see step h)
+      - If `ESCALATE` → trigger escalation (see step h)
 
-   h. **If consensus reached**, proceed to summary
+   h. **Escalation procedure** (when triggered by ESCALATE status or 2 consecutive deadlocks):
+      1. Append `[ESCALATE]` marker to session log:
+         ```bash
+         echo "[ESCALATE]" >> council/sessions/current.md
+         ```
+      2. Display to user: "Escalation triggered. Please provide input in the terminal window, then type 'continue' here when done."
+      3. **STOP and wait** for user to type "continue" (or similar confirmation) in the main chat
+      4. Read `council/sessions/escalation-response.txt` to get user's input
+      5. Incorporate user's input into next round, reset `consecutive_deadlock_count` to 0
 
-   i. **If no consensus**, continue to next round
+   i. **If consensus reached**, proceed to summary
+
+   j. **If no consensus**, continue to next round
 
 8. **On consensus OR max rounds**, create summary:
    ```

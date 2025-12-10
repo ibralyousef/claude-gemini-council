@@ -49,7 +49,7 @@ format_output() {
             *"GEMINI:"*|*"[GEMINI]"*)
                 echo -e "${BLUE}${line}${NC}"
                 ;;
-            *"[ESCALATE]"*|*"[ESCALATION]"*)
+            "[ESCALATE]"*|"[ESCALATION]"*)
                 echo -e "${RED}${BOLD}${line}${NC}"
                 handle_escalation "$line"
                 ;;
@@ -118,7 +118,7 @@ run_terminal() {
                         *"GEMINI:"*|*"[GEMINI]"*)
                             echo -e "${BLUE}${line}${NC}"
                             ;;
-                        *"[ESCALATE]"*|*"[ESCALATION]"*)
+                        "[ESCALATE]"*|"[ESCALATION]"*)
                             echo -e "${RED}${BOLD}${line}${NC}"
                             # Signal escalation needed
                             touch "${ESCALATION_FILE}.trigger"
