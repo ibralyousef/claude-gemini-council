@@ -72,3 +72,12 @@ Each entry follows this structure:
 - **Rounds to Resolution**: 5
 - **Session**: council/sessions/2025-12-11-120000.md
 
+
+## 2025-12-11 - Council Blueprint Output (Consensus)
+- **Topic**: Council should output technical implementation plans/architecture, ending with plan mode invocation
+- **Stance**: critical
+- **Decision**: Council protocol to be updated with COUNCIL_BLUEPRINT output format, persisted to `council/blueprint.md`, followed by EnterPlanMode invocation when action_required is true
+- **Rationale**: "Senate produces Bills, not press releases" - council must output legislative-quality specifications for downstream automation
+- **Dissent**: None - full consensus in 5 rounds
+- **Session**: council/sessions/2025-12-11-160000.md
+
