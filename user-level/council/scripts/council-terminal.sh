@@ -174,6 +174,10 @@ run_terminal() {
                 echo ""
                 echo -e "${CYAN}Press any key to close...${NC}"
                 read -n 1 -s
+                # Close the Terminal window on macOS
+                if [[ "$OSTYPE" == "darwin"* ]]; then
+                    osascript -e 'tell application "Terminal" to close front window' &>/dev/null
+                fi
                 exit 0
             fi
         fi
