@@ -154,19 +154,18 @@ fi
 # -y enables yolo mode so Gemini can use tools (read files, etc.)
 attempt=1
 while [ $attempt -le $MAX_RETRIES ]; do
-    # Run Gemini with -y (yolo mode for tool access), stderr filtered
-    OUTPUT=$($GEMINI_CLI -y -o text "$FULL_PROMPT" 2>&1 | grep -v "YOLO mode is enabled" | grep -v "Loaded cached credentials")
+    # Run Gemini with -y (yolo mode for tool access), stdin for prompt (avoids ARG_MAX + process table exposure)
+    OUTPUT=$(echo "$FULL_PROMPT" | $GEMINI_CLI -y -o text 2>&1 | grep -v "YOLO mode is enabled" | grep -v "Loaded cached credentials")
     EXIT_CODE=$?
 
     if [ $EXIT_CODE -eq 0 ] && [ -n "$OUTPUT" ]; then
-        # Success - output the result (filter empty lines only)
-        CLEANED_OUTPUT=$(echo "$OUTPUT" | grep -v "^$")
-        echo "$CLEANED_OUTPUT"
+        # Success - output the result (preserve blank lines for Markdown formatting)
+        echo "$OUTPUT"
         # Also write to output file if specified (with GEMINI: header)
         if [ -n "$OUTPUT_FILE" ]; then
             echo "
 **GEMINI:**
-$CLEANED_OUTPUT
+$OUTPUT
 " >> "$OUTPUT_FILE"
         fi
         exit 0
