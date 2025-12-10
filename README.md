@@ -2,6 +2,31 @@
 
 A collaborative planning system between Claude Code and Gemini CLI. Run `/council` from any project to start a multi-round discussion between two AI perspectives.
 
+## Installation
+
+### Prerequisites
+- [Claude Code](https://claude.ai/code) CLI installed
+- [Gemini CLI](https://github.com/google-gemini/gemini-cli) installed and authenticated
+
+### Install
+
+```bash
+git clone https://github.com/user/aicouncil.git
+cd aicouncil
+./install.sh
+```
+
+The install script will:
+1. Copy commands to `~/.claude/commands/`
+2. Copy protocol and scripts to `~/.claude/council/`
+3. Auto-detect your Gemini CLI path (or prompt for it)
+
+### Uninstall
+
+```bash
+./uninstall.sh
+```
+
 ## Quick Start
 
 ```bash
