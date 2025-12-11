@@ -98,3 +98,52 @@ Each entry follows this structure:
 - **Rationale**: Addresses gap between "press release" summaries and actionable plans; clear role separation (Council=WHAT/WHY, Agent=HOW)
 - **Dissent**: None - full consensus
 - **Rounds to Consensus**: 1
+
+## 2025-12-11 - File Sync & Council Utility Enhancements (Consensus)
+- **Topic**: 1. Make sure the repo and ~/.claude doesn't have unsynced files. 2. What can we add to this council? Come up with a concrete plan to make this council more useful and meaningful.
+- **Stance**: adversarial
+- **Decision**: 
+  1. **P0 Symlink Architecture**: Replace copy-based installation with symlinks (~/.claude/commands → repo). Single source of truth eliminates drift by design.
+  2. **P1 Agenda System**: New `council/memory/agenda.md` + `/council-agenda` command. Transforms council from reactive "on-demand chat" to proactive "strategic planning body".
+  3. **P2 Memory Archival**: When decisions.md > 50KB, rotate to decisions-archive-[YYYY].md (not truncation).
+- **Rationale**: 
+  - Gemini proved ~/.claude/commands had diverged 90+ lines from repo (Blueprint code missing in repo)
+  - Claude's "do nothing" stance was refuted by evidence
+  - Both agreed symlinks > manual sync > sync scripts
+  - Agenda system adds continuity and strategic planning capability
+- **Dissent**: 
+  - Claude proposed "health check" command → Gemini rejected as "admin fluff" (fix fragility, don't instrument it)
+  - Claude proposed truncation → Gemini proved memory is only 4KB, truncation is premature
+- **Rounds to Consensus**: 3
+- **Action Items Implemented**:
+  - [x] Synced ~/.claude/commands → user-level/commands
+  - [x] Created symlinks for council commands
+  - [x] Updated install.sh for symlink-based installation
+  - [x] Created council/memory/agenda.md
+  - [x] Created /council-agenda command
+- **Session**: council/sessions/2025-12-11-164500.md
+
+## 2025-12-11 - Protocol Consolidation & Simplification (Consensus)
+- **Topic**: The council protocol has been rewritten multiple times - ensure it's still robust and coherent, prioritize what to remove/add
+- **Stance**: critical
+- **Decision**: 
+  1. **MERGE** council-consensus.md INTO council.md (single source of truth)
+  2. **ADD** `--consensus` flag for consensus mode
+  3. **DELETE** council-consensus.md (no thin wrapper - slash commands are standalone)
+  4. **CONDENSE** 417 lines → 132 lines via:
+     - Collapsed 16 steps to 5 phases
+     - Condensed templates to single-line descriptions
+     - Removed verbose blueprint schema (referenced, not embedded)
+- **Rationale**: 
+  - ~200 lines were duplicated between files (DRY violation, maintenance drift)
+  - File splitting rejected: Claude Code has no auto-include, would require extra read_file call
+  - Thin wrapper rejected: slash commands standalone, wrapper = context switch + hallucination risk
+  - Keeping templates inline for portability (no cold-start penalty)
+- **Dissent**: None - full consensus
+- **Rounds to Consensus**: 4
+- **Implementation**: 
+  - [x] Merged council.md (132 lines, down from 417)
+  - [x] Deleted council-consensus.md
+  - [x] Updated install.sh
+  - [x] Updated symlinks
+- **Session**: council/sessions/2025-12-11-165800.md

@@ -41,26 +41,50 @@ mkdir -p "$CLAUDE_DIR/council/scripts"
 echo "  Created $CLAUDE_DIR/commands"
 echo "  Created $CLAUDE_DIR/council/scripts"
 
-# 3. Backup existing council files
+# 3. Backup and remove existing command files (preparing for symlinks)
 echo ""
 echo "[3/5] Backing up existing files..."
+BACKUP_DIR="$CLAUDE_DIR/commands.backup.$(date +%Y%m%d%H%M%S)"
 BACKUP_COUNT=0
-for file in "$CLAUDE_DIR/commands/council.md" "$CLAUDE_DIR/commands/council-consensus.md" "$CLAUDE_DIR/council/protocol.md"; do
-    if [ -f "$file" ]; then
-        mv "$file" "$file.bak"
-        echo "  Backed up: $file -> $file.bak"
+
+# Backup command files if they exist and are not already symlinks
+for file in "$CLAUDE_DIR/commands/council.md" "$CLAUDE_DIR/commands/council-agenda.md"; do
+    if [ -f "$file" ] && [ ! -L "$file" ]; then
+        mkdir -p "$BACKUP_DIR"
+        cp "$file" "$BACKUP_DIR/"
+        rm "$file"
+        echo "  Backed up: $file -> $BACKUP_DIR/"
         BACKUP_COUNT=$((BACKUP_COUNT + 1))
+    elif [ -L "$file" ]; then
+        rm "$file"
+        echo "  Removed existing symlink: $file"
     fi
 done
+
+# Backup protocol file
+if [ -f "$CLAUDE_DIR/council/protocol.md" ] && [ ! -L "$CLAUDE_DIR/council/protocol.md" ]; then
+    mkdir -p "$BACKUP_DIR"
+    mv "$CLAUDE_DIR/council/protocol.md" "$BACKUP_DIR/"
+    echo "  Backed up: protocol.md -> $BACKUP_DIR/"
+    BACKUP_COUNT=$((BACKUP_COUNT + 1))
+fi
+
 if [ $BACKUP_COUNT -eq 0 ]; then
     echo "  No existing files to backup"
 fi
 
-# 4. Copy files
+# 4. Create symlinks for commands (single source of truth = repo)
 echo ""
-echo "[4/5] Installing files..."
-cp "$SCRIPT_DIR/user-level/commands/council.md" "$CLAUDE_DIR/commands/"
-cp "$SCRIPT_DIR/user-level/commands/council-consensus.md" "$CLAUDE_DIR/commands/"
+echo "[4/5] Creating symlinks..."
+
+# Create symlinks to repo for command files
+ln -sf "$SCRIPT_DIR/user-level/commands/council.md" "$CLAUDE_DIR/commands/council.md"
+ln -sf "$SCRIPT_DIR/user-level/commands/council-agenda.md" "$CLAUDE_DIR/commands/council-agenda.md"
+
+echo "  Created symlink: ~/.claude/commands/council.md -> repo"
+echo "  Created symlink: ~/.claude/commands/council-agenda.md -> repo"
+
+# Copy non-command files (these are local config, not synced)
 cp "$SCRIPT_DIR/user-level/council/protocol.md" "$CLAUDE_DIR/council/"
 cp "$SCRIPT_DIR/user-level/council/scripts/invoke-gemini.sh" "$CLAUDE_DIR/council/scripts/"
 cp "$SCRIPT_DIR/user-level/council/scripts/council-terminal.sh" "$CLAUDE_DIR/council/scripts/"
@@ -68,13 +92,10 @@ cp "$SCRIPT_DIR/user-level/council/scripts/council-terminal.sh" "$CLAUDE_DIR/cou
 # Make scripts executable
 chmod +x "$CLAUDE_DIR/council/scripts/"*.sh
 
-echo "  Installed commands:"
-echo "    - council.md"
-echo "    - council-consensus.md"
 echo "  Installed council files:"
-echo "    - protocol.md"
-echo "    - scripts/invoke-gemini.sh"
-echo "    - scripts/council-terminal.sh"
+echo "    - protocol.md (copied)"
+echo "    - scripts/invoke-gemini.sh (copied)"
+echo "    - scripts/council-terminal.sh (copied)"
 
 # 5. Configure Gemini path if provided
 echo ""
@@ -93,8 +114,9 @@ echo "====================================="
 echo ""
 echo "Usage:"
 echo "  1. Navigate to any project directory"
-echo "  2. Run: /council <topic>"
-echo "     or: /council-consensus <topic>"
+echo "  2. Run: /council <topic>                    (standard mode)"
+echo "     or:  /council --consensus <topic>       (loop until resolved)"
+echo "     or:  /council-agenda list               (view agenda)"
 echo ""
 echo "The first run will create a council/ folder in your project with:"
 echo "  - council/GEMINI.md       (project context - edit this!)"
@@ -102,6 +124,6 @@ echo "  - council/memory/         (decisions and patterns)"
 echo "  - council/sessions/       (session logs)"
 echo ""
 echo "Stance options: cooperative | balanced | critical | adversarial"
-echo "Example: /council adversarial 5 Should we rewrite in Rust?"
+echo "Example: /council --consensus adversarial Should we rewrite in Rust?"
 echo ""
 echo "For more info, see: $SCRIPT_DIR/README.md"
