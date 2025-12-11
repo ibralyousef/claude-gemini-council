@@ -1,0 +1,7 @@
+# Council Visualizer Dependencies
+# Pin exact versions for deterministic output
+
+jinja2==3.1.6
+weasyprint==67.0
+svgwrite==1.4.3
+cairosvg==2.8.2

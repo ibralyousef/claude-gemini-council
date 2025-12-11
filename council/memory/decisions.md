@@ -81,3 +81,20 @@ Each entry follows this structure:
 - **Dissent**: None - full consensus in 5 rounds
 - **Session**: council/sessions/2025-12-11-160000.md
 
+
+## 2025-12-11 - Council Session Visualization Function (Consensus)
+- **Topic**: Create a function that outputs beautiful, colorful, deterministic media visualization of council session files
+- **Stance**: balanced
+- **Decision**: Use WeasyPrint + Jinja2 for HTML→PDF/PNG, svgwrite for SVG. Pipeline: Markdown → Parser (mistune) → JSON → Template → Output. Embed fonts and pin dependencies for determinism.
+- **Rationale**: WeasyPrint offers superior design flexibility via HTML/CSS while maintaining determinism with embedded assets; SVG provides scalability and small file sizes
+- **Dissent**: None - full consensus
+- **Rounds to Consensus**: 2
+
+
+## 2025-12-11 - Blueprint Implementation Refinement (Consensus)
+- **Topic**: Should the COUNCIL_BLUEPRINT concept from council/blueprint.md be implemented?
+- **Stance**: balanced
+- **Decision**: Yes, implement with conditional activation (action_required: true) and synthesis approach (reference decisions.md/patterns.md, don't duplicate)
+- **Rationale**: Addresses gap between "press release" summaries and actionable plans; clear role separation (Council=WHAT/WHY, Agent=HOW)
+- **Dissent**: None - full consensus
+- **Rounds to Consensus**: 1
