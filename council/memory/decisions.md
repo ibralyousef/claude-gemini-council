@@ -147,3 +147,115 @@ Each entry follows this structure:
   - [x] Updated install.sh
   - [x] Updated symlinks
 - **Session**: council/sessions/2025-12-11-165800.md
+
+## 2025-12-11 - Protocol Coherence Review (Consensus)
+- **Topic**: Protocol review - ensure robustness/coherence, identify what to remove/add
+- **Stance**: critical
+- **Decision**: Clean up protocol inconsistencies across all files
+- **Changes Implemented**:
+  1. **P0**: Removed "Cooperative" stance from protocol.md and invoke-gemini.sh
+  2. **P0**: Added COUNCIL_BLUEPRINT schema to protocol.md
+  3. **P0**: Added QUESTION field to COUNCIL_RESPONSE format for escalation
+  4. **P1**: Added explicit quiet mode conditionals to council.md
+  5. **P1**: Added USER_INPUT field for AskUserQuestion answer logging
+  6. **P1**: Deleted council-terminal.sh (dead code)
+  7. **P2**: Deleted escalation-response.txt (legacy artifact)
+  8. **Sync**: Replaced ~/.claude/council/ files with symlinks to repo
+- **Rationale**: Multiple rewrites had caused stance definition drift, dead code accumulation, and incomplete escalation flow
+- **Dissent**: None - full consensus in 3 rounds
+- **Session**: council/sessions/2025-12-11-091500.md
+
+## 2025-12-11 - Protocol Bug Fixes (Consensus)
+- **Topic**: Three protocol issues - EnterPlanMode clarity, session logging, Gemini response display
+- **Stance**: critical
+- **Decision**: Fix three bugs in council.md
+- **Bugs Fixed**:
+  1. **P0**: EnterPlanMode missing from allowed-tools (mandated but not permitted)
+  2. **P1**: Phase 4 has no logging instruction (summary lost before rename)
+  3. **P2**: Phase 3f unclear about displaying Gemini response in chat
+- **Rationale**: User reported ctrl+o requirement to view responses, and noticed session logs incomplete
+- **Dissent**: None - full consensus in 1 round
+- **Session**: council/sessions/2025-12-11-093000.md
+
+## 2025-12-11 - Blueprint Storage & Chair Architecture (Consensus)
+- **Topic**: Should blueprints be archived? Should Chair be a spawned agent?
+- **Stance**: critical
+- **Decision**:
+  1. **Blueprint Storage**: Keep blueprint.md as ephemeral "Active Plan", but archive copy to session file before rename
+  2. **Chair Architecture**: Keep current design (Main Claude as Chair)
+- **Rationale**:
+  - Blueprint: decisions.md captures WHAT, but blueprint captures HOW (success criteria, files). Worth preserving. Session file is natural archive location.
+  - Chair: Spawned agent provides theoretical neutrality but practical complexity outweighs benefit. Existing safeguards (Immutability Rule, Debate as Debiasing) sufficient.
+- **Dissent**: None - full consensus in 2 rounds (initial disagreement on both points, resolved)
+- **Session**: council/sessions/2025-12-11-094500.md
+
+## 2025-12-11 - Prompt Structure Improvements (Consensus)
+- **Topic**: Are Claude's prompts to Gemini acceptable? Does Gemini have improvement suggestions?
+- **Stance**: critical
+- **Decision**:
+  1. Auto-inject SESSION HISTORY via invoke-gemini.sh from current.md
+  2. Remove per-round `[Instructions for Gemini...]` - Protocol + Stance define task
+  3. Adopt new prompt structure: CONTEXT, POSITION, HISTORY sections
+  4. Handle Round 1 edge case gracefully
+- **Rationale**:
+  - Summaries are lossy/biased; verbatim history prevents "amnesia" and detects circular logic
+  - Per-round instructions are noise since protocol.md already injected
+  - 50KB history is only ~6% of 200k context - token limit concern was premature
+- **Dissent**: None - full consensus in 3 rounds
+- **Session**: council/sessions/2025-12-11-100000.md
+
+## 2025-12-11 - Repo Installation Readiness (Consensus)
+- **Topic**: Will this repo successfully install the council when published?
+- **Stance**: critical
+- **Decision**: NO - P0 bug prevents installation. Fixes required.
+- **Issues Found**:
+  1. P0: install.sh references deleted council-terminal.sh (WILL FAIL)
+  2. P1: README.md outdated (wrong commands, deleted files)
+  3. P1: install.sh uses cp not symlinks for protocol/scripts
+  4. P2: No Gemini CLI functional verification
+- **Fixes Required**:
+  1. Remove council-terminal.sh from install.sh
+  2. Symlink ALL user-level files
+  3. Update README.md comprehensively
+  4. Add Gemini --version check
+- **Dissent**: None - full consensus in 2 rounds
+- **Session**: council/sessions/2025-12-11-103000.md
+
+## 2025-12-11 - Markdown Heading Consistency (Consensus)
+- **Topic**: Claude uses `### CLAUDE'S POSITION` but Gemini outputs `*** GEMINI ***` - how to fix?
+- **Stance**: balanced
+- **Decision**: Implement Script-Authoritative approach - the wrapper script is the "System of Record" for document structure
+- **Changes Required**:
+  1. Edit `invoke-gemini.sh`: Change `**GEMINI:**` to `### GEMINI'S POSITION` (lines 142-147)
+  2. Edit `protocol.md`: Add instruction for Gemini not to generate its own header
+- **Rationale**: Script-authoritative is deterministic (bash) vs probabilistic (model output). Avoids double-header problem and reduces prompt token overhead.
+- **Dissent**: None - full consensus in 1 round
+- **Session**: council/sessions/2025-12-11-120000.md
+
+## 2025-12-11 - Gemini Read-Only Restriction (Consensus)
+- **Topic**: Should Gemini be allowed to modify files, or should non-Chair participants only plan/architect?
+- **Stance**: balanced
+- **Decision**: Restrict Gemini to read-only tools during council sessions. Replace `-y` (yolo mode) with `--allowed-tools` whitelist.
+- **Allowed Tools**: `read_file`, `list_directory`, `glob`, `search_file_content`
+- **Excluded Tools**: `write_file`, `replace`, `run_shell_command`
+- **Rationale**:
+  - Council = Senate (deliberates, produces blueprints), not Executor (makes changes)
+  - User reported confusion when Gemini modified files mid-session
+  - Single chain of responsibility: only Claude (Chair) makes changes after plan mode approval
+- **Trade-off Accepted**: Gemini loses `run_shell_command` (git status, npm test) in exchange for safety
+- **Dissent**: None - full consensus in 1 round
+- **Session**: council/sessions/2025-12-11-130000.md
+
+## 2025-12-11 - Bidirectional Council Chairing (Consensus)
+- **Topic**: Can Gemini Chair council sessions when invoked from its CLI?
+- **Stance**: balanced
+- **Decision**: Yes - implement bidirectional council chairing via symmetric architecture. Either AI can serve as Chair or Participant with appropriate tool restrictions.
+- **Key Points**:
+  1. Claude CLI supports `--allowedTools` flag, enabling symmetric read-only participant mode
+  2. Create `invoke-claude.sh` mirroring `invoke-gemini.sh`
+  3. Create `user-level/gemini-commands/council.md` for Gemini's /council command
+  4. Both participants get read-only investigation capability (Read/Glob/Grep for Claude, read_file/glob/search_file_content for Gemini)
+  5. Chair always has full tool access regardless of which AI
+- **Rationale**: Architectural symmetry is a strong design goal; protocol-defined Chair role is agent-agnostic
+- **Dissent**: None - full consensus in 3 rounds
+- **Session**: council/sessions/2025-12-11-140000.md

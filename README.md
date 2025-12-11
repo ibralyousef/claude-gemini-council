@@ -17,8 +17,8 @@ cd aicouncil
 ```
 
 The install script will:
-1. Copy commands to `~/.claude/commands/`
-2. Copy protocol and scripts to `~/.claude/council/`
+1. Create symlinks for commands in `~/.claude/commands/`
+2. Create symlinks for protocol and scripts in `~/.claude/council/`
 3. Auto-detect your Gemini CLI path (or prompt for it)
 
 ### Uninstall
@@ -40,7 +40,7 @@ The install script will:
 /council adversarial 5 Should we rewrite the backend in Rust?
 
 # Consensus mode (continues until agreement, max 10 rounds)
-/council-consensus Database migration strategy
+/council --consensus Database migration strategy
 ```
 
 ## Stance Levels
@@ -49,7 +49,6 @@ Control how critically Gemini challenges Claude's positions:
 
 | Level | Behavior |
 |-------|----------|
-| `cooperative` | Build on ideas, seek synthesis, gentle challenges |
 | `balanced` | Fair critique, acknowledge good and bad (default) |
 | `critical` | Find flaws, question assumptions, demand evidence |
 | `adversarial` | Devil's advocate, stress-test everything, relentless scrutiny |
@@ -58,11 +57,12 @@ Control how critically Gemini challenges Claude's positions:
 
 ### `/council [level] [rounds] <topic>`
 
-Standard council session with fixed number of rounds.
+Standard council session with fixed number of rounds, or consensus mode.
 
 **Arguments:**
-- `level` (optional): cooperative, balanced, critical, or adversarial
+- `level` (optional): balanced, critical, or adversarial
 - `rounds` (optional): number of discussion rounds (default: 3)
+- `--consensus` (optional): if present, continues until consensus is reached (max 10 rounds)
 - `topic` (required): what to discuss
 
 **Examples:**
@@ -71,21 +71,7 @@ Standard council session with fixed number of rounds.
 /council critical How to handle rate limiting?
 /council 3 API design review
 /council Should we use Redis?
-```
-
-### `/council-consensus [level] <topic>`
-
-Continues until consensus is reached (max 10 rounds).
-
-**Arguments:**
-- `level` (optional): stance level
-- `topic` (required): what to reach consensus on
-
-**Examples:**
-```bash
-/council-consensus adversarial Microservices vs monolith?
-/council-consensus critical Authentication architecture
-/council-consensus Database migration strategy
+/council --consensus Database migration strategy
 ```
 
 ## File Structure
@@ -95,13 +81,14 @@ Continues until consensus is reached (max 10 rounds).
 ```
 ~/.claude/
 ├── commands/
-│   ├── council.md              # Main council command
-│   └── council-consensus.md    # Consensus mode command
+│   ├── council.md              # Main council command (symlinked)
+│   └── council-agenda.md       # Agenda command (symlinked)
 └── council/
-    ├── protocol.md             # Universal Gemini instructions
-    └── scripts/
-        ├── invoke-gemini.sh    # Gemini wrapper with protocol injection
-        └── council-terminal.sh # Interactive terminal UI
+    ├── protocol.md             # Gemini participant protocol (symlinked)
+    ├── claude-participant-protocol.md  # Claude participant protocol (symlinked)
+    └── scripts/                # Scripts (symlinked directory)
+        ├── invoke-gemini.sh    # Invoke Gemini as participant
+        └── invoke-claude.sh    # Invoke Claude as participant
 ```
 
 ### Project-level (per-project) - `./council/`
@@ -121,6 +108,8 @@ Created automatically on first run in any project:
 
 ## How It Works
 
+### Claude as Chair (Default)
+
 1. **Claude as Chair**: Claude orchestrates the discussion and maintains the session log
 2. **Gemini as Participant + Investigator**: Gemini responds according to assigned stance, can use tools to verify claims
 3. **Protocol Injection**: `invoke-gemini.sh` injects:
@@ -129,6 +118,32 @@ Created automatically on first run in any project:
    - Project context (`./council/GEMINI.md`)
    - Memory files (`./council/memory/*.md`)
 4. **Structured Responses**: Gemini returns COUNCIL_RESPONSE blocks for automated processing
+
+### Gemini as Chair (Bidirectional Mode)
+
+The council supports bidirectional chairing. Either AI can run as Chair:
+
+**From Gemini CLI:**
+```bash
+# Basic invocation
+echo "Should we refactor the auth module?" | ~/.claude/council/scripts/invoke-claude.sh balanced
+
+# With output file logging
+echo "Database migration strategy" | ~/.claude/council/scripts/invoke-claude.sh critical council/sessions/current.md
+```
+
+When Gemini chairs:
+1. **Gemini as Chair**: Gemini orchestrates the discussion and maintains the session log
+2. **Claude as Participant + Investigator**: Claude responds according to assigned stance, with read-only tools (Read, Glob, Grep)
+3. **Protocol Injection**: `invoke-claude.sh` injects the same context structure
+4. **Same session directory**: All sessions stored in `./council/sessions/` regardless of Chair
+
+**Symmetric Tool Restrictions:**
+| Role | Chair | Participant |
+|------|-------|-------------|
+| Tools | Full access | Read-only (investigation only) |
+
+This ensures the Chair maintains control over file modifications while participants can still verify claims.
 
 ## COUNCIL_RESPONSE Format
 
@@ -220,7 +235,7 @@ RETRY_DELAY=2
 ## Tips
 
 1. **Use `adversarial` for important decisions** - Stress-test ideas before committing
-2. **Use `cooperative` for brainstorming** - Build on ideas without heavy critique
+2. **Use `balanced` for brainstorming** - Fair critique while building on ideas
 3. **Check session logs** - Full transcripts saved in `./council/sessions/`
 4. **Edit GEMINI.md** - Better project context = better Gemini responses
 5. **Gemini can read files** - Ask it to verify claims about your codebase

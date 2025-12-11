@@ -1,62 +1,38 @@
 # COUNCIL_BLUEPRINT
+## Session: 2025-12-11-140000 | Topic: Bidirectional Council Chairing | Status: RESOLVED
+## Decision: Implement Bidirectional Council Chairing via Symmetric Architecture
+## Action Required: true
 
-## Session
-- **ID**: 2025-12-11-160000
-- **Topic**: Council protocol updates for plan-oriented output
-- **Status**: RESOLVED (Full Consensus)
-
-## Decision Summary
-The AI Council protocol must be updated to output structured implementation blueprints and automatically transition to planning mode when action is required.
-
-## Rationale
-The current council produces "summaries" (press releases) instead of actionable specifications (Bills). Users need technical implementation plans, not just decision documentation.
-
-## Action Required
-**true**
+> **CHAIR INSTRUCTION**: If Action Required is true, you MUST invoke `EnterPlanMode` tool now. Do NOT implement directly.
 
 ## Architecture
 
-### Decisions
-| Key | Choice | Rationale |
-|-----|--------|-----------|
-| output_format | COUNCIL_BLUEPRINT (structured) | Enables automated handoff to plan mode |
-| persistence | council/blueprint.md | Physical file prevents context loss |
-| handoff_mechanism | EnterPlanMode (built-in tool) | Native Claude Code capability, no custom command needed |
+| Component | Description |
+|-----------|-------------|
+| invoke-claude.sh | Mirror of invoke-gemini.sh using `claude --print --allowedTools "Read,Glob,Grep"` |
+| Symmetric Security | Participant = read-only tools, Chair = full tool access |
+| Config Storage | Claude: `user-level/commands/`, Gemini: `user-level/gemini-commands/` |
 
-### Patterns
-- Blueprint-driven planning: Council defines WHAT/WHY, Agent defines HOW
-- Persistent artifacts: Critical outputs written to files, not just context
-- Explicit handoffs: Chair explicitly invokes plan mode, no implicit triggers
-
-### Anti-Patterns
-- "Press release" summaries without actionable structure
-- Context-dependent handoffs (fragile, can be lost)
-- Automatic triggers without user visibility
+### Tool Access Matrix
+| Role | Chair | Participant |
+|------|-------|-------------|
+| Claude | Full access | Read, Glob, Grep |
+| Gemini | Full access | read_file, glob, search_file_content |
 
 ## Scope
-
-### Components Affected
-- `~/.claude/commands/council.md` - User-level council command
-- `council/blueprint.md` - New artifact file (template)
-- `council/sessions/` - Session logs (format update)
-
-### Files to Modify
-- `~/.claude/commands/council.md` - Add blueprint generation and plan mode steps
+- `user-level/council/scripts/invoke-claude.sh` - New script for invoking Claude as participant
+- `user-level/gemini-commands/council.md` - Gemini's /council command definition
+- `install.sh` - Add Gemini command installation logic
 
 ## Constraints
-- Blueprint schema must be Markdown (LLM-readable, human-readable)
-- Chair must explicitly invoke EnterPlanMode (no automatic hidden triggers)
-- User review step must occur before plan mode (existing AskUserQuestion step)
-
-## Prerequisites
-- [ ] Read current council.md to understand existing structure
-- [ ] Verify EnterPlanMode tool is available (confirmed)
+- `invoke-claude.sh` MUST use `claude --print --allowedTools "Read,Glob,Grep"` for read-only participant mode
+- `invoke-claude.sh` MUST inject memory files (decisions.md, patterns.md) and session context (current.md)
+- Session files remain in `council/sessions/` regardless of which AI chairs
+- Session header should indicate `Chair: Claude|Gemini` for auditability
 
 ## Success Criteria
-- [ ] Council sessions produce `council/blueprint.md` with structured content
-- [ ] After user approves summary, EnterPlanMode is invoked with blueprint context
-- [ ] Blueprint schema is documented in council.md
-- [ ] Existing council functionality (rounds, Gemini invocation, memory) preserved
-
-## Dissent
-None - full consensus reached between Claude and Gemini in 5 rounds.
+- [ ] `invoke-claude.sh` returns structured COUNCIL_RESPONSE when called from shell
+- [ ] Claude as participant cannot use write tools (verified via allowedTools restriction)
+- [ ] Gemini-chaired sessions log to same `council/sessions/` directory
+- [ ] Session files include Chair identification metadata
+- [ ] `install.sh` successfully installs Gemini commands when Gemini CLI is detected

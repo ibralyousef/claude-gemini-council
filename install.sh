@@ -33,6 +33,15 @@ else
     fi
 fi
 
+if [ -n "$GEMINI_PATH" ]; then
+    echo "  Verifying Gemini CLI functionality..."
+    if ! "$GEMINI_PATH" --version &> /dev/null; then
+        echo "  ERROR: Gemini CLI at '$GEMINI_PATH' is not functional. Please check the path or install it correctly."
+        exit 1
+    fi
+    echo "  Gemini CLI verified."
+fi
+
 # 2. Create ~/.claude directories if needed
 echo ""
 echo "[2/5] Creating directories..."
@@ -85,17 +94,12 @@ echo "  Created symlink: ~/.claude/commands/council.md -> repo"
 echo "  Created symlink: ~/.claude/commands/council-agenda.md -> repo"
 
 # Copy non-command files (these are local config, not synced)
-cp "$SCRIPT_DIR/user-level/council/protocol.md" "$CLAUDE_DIR/council/"
-cp "$SCRIPT_DIR/user-level/council/scripts/invoke-gemini.sh" "$CLAUDE_DIR/council/scripts/"
-cp "$SCRIPT_DIR/user-level/council/scripts/council-terminal.sh" "$CLAUDE_DIR/council/scripts/"
+ln -sf "$SCRIPT_DIR/user-level/council/protocol.md" "$CLAUDE_DIR/council/protocol.md"
+ln -sf "$SCRIPT_DIR/user-level/council/claude-participant-protocol.md" "$CLAUDE_DIR/council/claude-participant-protocol.md"
+ln -sf "$SCRIPT_DIR/user-level/council/scripts" "$CLAUDE_DIR/council/scripts"
 
-# Make scripts executable
-chmod +x "$CLAUDE_DIR/council/scripts/"*.sh
-
-echo "  Installed council files:"
-echo "    - protocol.md (copied)"
-echo "    - scripts/invoke-gemini.sh (copied)"
-echo "    - scripts/council-terminal.sh (copied)"
+echo "  Created symlink: ~/.claude/council/scripts -> repo"
+echo "  Created symlink: ~/.claude/council/claude-participant-protocol.md -> repo"
 
 # 5. Configure Gemini path if provided
 echo ""
@@ -112,7 +116,7 @@ echo "====================================="
 echo "  Installation Complete!"
 echo "====================================="
 echo ""
-echo "Usage:"
+echo "Usage (Claude as Chair):"
 echo "  1. Navigate to any project directory"
 echo "  2. Run: /council <topic>                    (standard mode)"
 echo "     or:  /council --consensus <topic>       (loop until resolved)"
@@ -123,7 +127,22 @@ echo "  - council/GEMINI.md       (project context - edit this!)"
 echo "  - council/memory/         (decisions and patterns)"
 echo "  - council/sessions/       (session logs)"
 echo ""
-echo "Stance options: cooperative | balanced | critical | adversarial"
+echo "Stance options: balanced | critical | adversarial"
 echo "Example: /council --consensus adversarial Should we rewrite in Rust?"
+echo ""
+echo "====================================="
+echo "  Gemini as Chair (Bidirectional Mode)"
+echo "====================================="
+echo ""
+echo "To run council sessions with Gemini as Chair, use invoke-claude.sh:"
+echo ""
+echo "  From Gemini CLI:"
+echo "    echo \"[topic]\" | ~/.claude/council/scripts/invoke-claude.sh [stance] [output_file]"
+echo ""
+echo "  Example:"
+echo "    echo \"Should we refactor the auth module?\" | ~/.claude/council/scripts/invoke-claude.sh balanced council/sessions/current.md"
+echo ""
+echo "The symmetric architecture allows either AI to chair council sessions."
+echo "Session files are stored in the same council/sessions/ directory."
 echo ""
 echo "For more info, see: $SCRIPT_DIR/README.md"
