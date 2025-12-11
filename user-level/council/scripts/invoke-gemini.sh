@@ -7,7 +7,7 @@
 # process table exposure of sensitive session content.
 #
 # Arguments:
-#   stance - Optional: cooperative|balanced|critical|adversarial (default: balanced)
+#   stance - Optional: balanced|critical|adversarial (default: balanced)
 #   output_file - Optional: File to append output to (in addition to stdout)
 #
 # Context injection order:
@@ -16,7 +16,8 @@
 # 3. $PWD/council/GEMINI.md - Project context (if exists)
 # 4. $PWD/council/memory/decisions.md - Past decisions (if exists)
 # 5. $PWD/council/memory/patterns.md - Learned patterns (if exists)
-# 6. User prompt
+# 6. $PWD/council/sessions/current.md - Session history (if exists and >10 lines)
+# 7. User prompt
 
 # Gemini CLI path - can be overridden by GEMINI_CLI env var or install script
 # Auto-detect if not set
@@ -53,14 +54,6 @@ fi
 # Define stance instructions
 get_stance_instructions() {
     case "$1" in
-        cooperative)
-            echo "STANCE: Cooperative
-- Build on Claude's ideas constructively
-- Look for synthesis opportunities
-- Gentle challenges only when necessary
-- Focus on improving ideas, not defeating them
-- Seek common ground and mutual understanding"
-            ;;
         balanced)
             echo "STANCE: Balanced
 - Fair critique of strengths and weaknesses
@@ -148,6 +141,20 @@ $PATTERNS"
     fi
 fi
 
+# 6. Session history (from current.md - for context continuity)
+SESSION_FILE="$PROJECT_COUNCIL_DIR/sessions/current.md"
+if [ -f "$SESSION_FILE" ]; then
+    SESSION_CONTENT=$(cat "$SESSION_FILE")
+    # Only inject if there's meaningful content (more than just header)
+    LINE_COUNT=$(echo "$SESSION_CONTENT" | wc -l)
+    if [ "$LINE_COUNT" -gt 10 ]; then
+        FULL_CONTEXT="$FULL_CONTEXT
+
+=== SESSION HISTORY ===
+$SESSION_CONTENT"
+    fi
+fi
+
 # Build full prompt
 if [ -n "$FULL_CONTEXT" ]; then
     FULL_PROMPT="$FULL_CONTEXT
@@ -160,11 +167,13 @@ else
 fi
 
 # Invoke Gemini with retry logic
-# -y enables yolo mode so Gemini can use tools (read files, etc.)
+# Use --allowed-tools whitelist for read-only access (Council = Senate, not Executor)
+# Gemini can read/search but NOT modify files or run shell commands
+ALLOWED_TOOLS="read_file,list_directory,glob,search_file_content,web_search"
 attempt=1
 while [ $attempt -le $MAX_RETRIES ]; do
-    # Run Gemini with -y (yolo mode for tool access), stdin for prompt (avoids ARG_MAX + process table exposure)
-    OUTPUT=$(echo "$FULL_PROMPT" | $GEMINI_CLI -y -o text 2>&1 | grep -v "YOLO mode is enabled" | grep -v "Loaded cached credentials")
+    # Run Gemini with read-only tool whitelist, stdin for prompt (avoids ARG_MAX + process table exposure)
+    OUTPUT=$(echo "$FULL_PROMPT" | $GEMINI_CLI --allowed-tools "$ALLOWED_TOOLS" -o text 2>&1 | grep -v "Loaded cached credentials")
     EXIT_CODE=$?
 
     if [ $EXIT_CODE -eq 0 ] && [ -n "$OUTPUT" ]; then
@@ -173,7 +182,7 @@ while [ $attempt -le $MAX_RETRIES ]; do
         # Also write to output file if specified (with GEMINI: header)
         if [ -n "$OUTPUT_FILE" ]; then
             echo "
-**GEMINI:**
+### GEMINI'S POSITION
 $OUTPUT
 " >> "$OUTPUT_FILE"
         fi
