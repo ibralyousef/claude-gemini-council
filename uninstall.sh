@@ -19,14 +19,14 @@ echo ""
 echo "Removing files..."
 
 # Remove commands
-if [ -f "$CLAUDE_DIR/commands/council.md" ]; then
+if [ -f "$CLAUDE_DIR/commands/council.md" ] || [ -L "$CLAUDE_DIR/commands/council.md" ]; then
     rm "$CLAUDE_DIR/commands/council.md"
     echo "  Removed: commands/council.md"
 fi
 
-if [ -f "$CLAUDE_DIR/commands/council-consensus.md" ]; then
-    rm "$CLAUDE_DIR/commands/council-consensus.md"
-    echo "  Removed: commands/council-consensus.md"
+if [ -f "$CLAUDE_DIR/commands/council-agenda.md" ] || [ -L "$CLAUDE_DIR/commands/council-agenda.md" ]; then
+    rm "$CLAUDE_DIR/commands/council-agenda.md"
+    echo "  Removed: commands/council-agenda.md"
 fi
 
 # Remove council directory
@@ -39,7 +39,7 @@ fi
 echo ""
 echo "Checking for backups..."
 RESTORED=0
-for backup in "$CLAUDE_DIR/commands/council.md.bak" "$CLAUDE_DIR/commands/council-consensus.md.bak"; do
+for backup in "$CLAUDE_DIR/commands/council.md.bak" "$CLAUDE_DIR/commands/council-agenda.md.bak"; do
     if [ -f "$backup" ]; then
         mv "$backup" "${backup%.bak}"
         echo "  Restored: ${backup%.bak}"

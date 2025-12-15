@@ -1,38 +1,38 @@
 # COUNCIL_BLUEPRINT
-## Session: 2025-12-11-140000 | Topic: Bidirectional Council Chairing | Status: RESOLVED
-## Decision: Implement Bidirectional Council Chairing via Symmetric Architecture
+## Session: 2025-12-15T120000 | Topic: Repo publication readiness | Status: RESOLVED
+## Decision: Fix installation bugs and add LICENSE before publishing
 ## Action Required: true
 
 > **CHAIR INSTRUCTION**: If Action Required is true, you MUST invoke `EnterPlanMode` tool now. Do NOT implement directly.
 
 ## Architecture
 
-| Component | Description |
-|-----------|-------------|
-| invoke-claude.sh | Mirror of invoke-gemini.sh using `claude --print --allowedTools "Read,Glob,Grep"` |
-| Symmetric Security | Participant = read-only tools, Chair = full tool access |
-| Config Storage | Claude: `user-level/commands/`, Gemini: `user-level/gemini-commands/` |
-
-### Tool Access Matrix
-| Role | Chair | Participant |
-|------|-------|-------------|
-| Claude | Full access | Read, Glob, Grep |
-| Gemini | Full access | read_file, glob, search_file_content |
+| Component | Decision | Rationale |
+|-----------|----------|-----------|
+| install.sh | Add rm before symlink | Prevents scripts/scripts/ nesting on fresh install |
+| LICENSE | Add MIT | Legal requirement for open source |
+| uninstall.sh | Update file list | Sync with current installation |
+| council.md | Document both arg formats | UX consistency with README |
+| project-template/ | Delete | Dead code, dynamic generation in Phase 1 |
 
 ## Scope
-- `user-level/council/scripts/invoke-claude.sh` - New script for invoking Claude as participant
-- `user-level/gemini-commands/council.md` - Gemini's /council command definition
-- `install.sh` - Add Gemini command installation logic
+
+Files to modify:
+1. `/Users/fermious/aicouncil/install.sh` - Add pre-symlink cleanup (before line 99)
+2. `/Users/fermious/aicouncil/LICENSE` - Create new with MIT text
+3. `/Users/fermious/aicouncil/uninstall.sh` - Add council-agenda.md, remove council-consensus.md ref
+4. `/Users/fermious/aicouncil/user-level/commands/council.md` - Update argument docs (line 15) + add agenda.md to Phase 1
+5. `/Users/fermious/aicouncil/project-template/` - Delete directory
 
 ## Constraints
-- `invoke-claude.sh` MUST use `claude --print --allowedTools "Read,Glob,Grep"` for read-only participant mode
-- `invoke-claude.sh` MUST inject memory files (decisions.md, patterns.md) and session context (current.md)
-- Session files remain in `council/sessions/` regardless of which AI chairs
-- Session header should indicate `Chair: Claude|Gemini` for auditability
+- Do NOT add council/ files to .gitignore (this is the reference implementation)
+- Keep both short flags (-a, -b, -c) and full words (adversarial, balanced, critical) for stance
 
 ## Success Criteria
-- [ ] `invoke-claude.sh` returns structured COUNCIL_RESPONSE when called from shell
-- [ ] Claude as participant cannot use write tools (verified via allowedTools restriction)
-- [ ] Gemini-chaired sessions log to same `council/sessions/` directory
-- [ ] Session files include Chair identification metadata
-- [ ] `install.sh` successfully installs Gemini commands when Gemini CLI is detected
+- [ ] Fresh `./install.sh` creates `~/.claude/council/scripts` as symlink (not `scripts/scripts/`)
+- [ ] LICENSE file exists at repo root with MIT text
+- [ ] `./uninstall.sh` removes council-agenda.md
+- [ ] `./uninstall.sh` does NOT reference council-consensus.md
+- [ ] council.md line 15 shows both formats: `'-b'/'balanced' | '-c'/'critical' | '-a'/'adversarial'`
+- [ ] council.md Phase 1 includes agenda.md creation
+- [ ] No `project-template/` directory exists

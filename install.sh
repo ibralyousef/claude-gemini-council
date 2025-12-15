@@ -93,6 +93,12 @@ ln -sf "$SCRIPT_DIR/user-level/commands/council-agenda.md" "$CLAUDE_DIR/commands
 echo "  Created symlink: ~/.claude/commands/council.md -> repo"
 echo "  Created symlink: ~/.claude/commands/council-agenda.md -> repo"
 
+# Remove existing scripts directory/symlink before creating new symlink
+# This prevents nested scripts/scripts/ structure on fresh installs
+if [ -e "$CLAUDE_DIR/council/scripts" ]; then
+    rm -rf "$CLAUDE_DIR/council/scripts"
+fi
+
 # Copy non-command files (these are local config, not synced)
 ln -sf "$SCRIPT_DIR/user-level/council/protocol.md" "$CLAUDE_DIR/council/protocol.md"
 ln -sf "$SCRIPT_DIR/user-level/council/claude-participant-protocol.md" "$CLAUDE_DIR/council/claude-participant-protocol.md"

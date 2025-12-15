@@ -276,3 +276,18 @@ Each entry follows this structure:
 - **Dissent**: Philosophical disagreement persists on which metric matters more - Claude values individual sophistication, Gemini values species-level robustness
 - **Rounds to Consensus**: 4
 - **Session**: council/sessions/2025-12-15-*.md
+
+## 2025-12-15 - Repo Publication Readiness (Consensus)
+- **Topic**: Ensure AI Council repo is worth sharing - installation, architecture, protocol, methodology
+- **Stance**: adversarial
+- **Decision**: Six fixes required before publishing:
+  1. P0: Fix install.sh symlink bug (creates scripts/scripts/ on fresh install)
+  2. P0: Add MIT LICENSE file
+  3. P1: Fix uninstall.sh (add council-agenda.md, remove stale council-consensus.md ref)
+  4. P1: Update council.md to document both flag and full-word stance arguments
+  5. P1: Add agenda.md creation to Phase 1 initialization
+  6. P1: Delete project-template/ (dead code)
+- **Rationale**: Gemini identified critical install bug through code inspection; both agreed .gitignore changes would be destructive (repo is reference implementation)
+- **Dissent**: None - full consensus
+- **Rounds to Consensus**: 5
+- **Session**: council/sessions/2025-12-15-120000.md

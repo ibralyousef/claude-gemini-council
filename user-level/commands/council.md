@@ -1,7 +1,7 @@
 ---
 description: "Start AI Council session with Gemini for collaborative planning"
 allowed-tools: ["Bash", "Read", "Write", "Glob", "Grep", "AskUserQuestion", "EnterPlanMode"]
-argument-hint: "[-q] [-c] [-b|-c|-a] [rounds] <topic>"
+argument-hint: "[-q] [--consensus] [balanced|critical|adversarial] [rounds] <topic>"
 ---
 
 # AI Council Session
@@ -12,7 +12,7 @@ Collaborative planning session with Gemini CLI. Two modes: Standard (fixed round
 Parse in order:
 1. `-q` / `--quiet` (optional): Suppress verbose output
 2. `--consensus` (optional): Loop until consensus (max 10 rounds)
-3. Stance (optional): `-b` balanced | `-c` critical | `-a` adversarial (default: balanced)
+3. Stance (optional): `-b`/`balanced` | `-c`/`critical` | `-a`/`adversarial` (default: balanced)
 4. Rounds (optional): Number 1-10 (default: 3, ignored if consensus mode)
 5. Topic (required): Everything else
 
@@ -26,9 +26,9 @@ Parse in order:
 - `/council -c 3 API design` → critical, 3 rounds
 
 ## Stances (no cooperative - too soft)
-- **-b / balanced**: Fair critique, acknowledge pros/cons (default)
-- **-c / critical**: Find flaws, demand evidence
-- **-a / adversarial**: Devil's advocate, stress-test everything
+- **balanced** (`-b`): Fair critique, acknowledge pros/cons (default)
+- **critical** (`-c`): Find flaws, demand evidence
+- **adversarial** (`-a`): Devil's advocate, stress-test everything
 
 ## Protocol
 
@@ -36,7 +36,7 @@ Parse in order:
 1. Read memory files if they exist: `council/memory/decisions.md`, `council/memory/patterns.md`
 2. If `council/` doesn't exist, create structure:
    - `council/GEMINI.md` (template: `# Project Context\n## Overview\n[Edit this]`)
-   - `council/memory/decisions.md`, `council/memory/patterns.md`
+   - `council/memory/decisions.md`, `council/memory/patterns.md`, `council/memory/agenda.md`
    - `council/sessions/`
 3. Check for `council/sessions/current.md`:
    - Exists? Ask: "Resume or start fresh?" (fresh → rename to `orphaned-[timestamp].md`)
