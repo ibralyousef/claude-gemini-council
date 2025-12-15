@@ -2,6 +2,8 @@
 
 A collaborative planning system between Claude Code and Gemini CLI. Run `/council` from any project to start a multi-round discussion between two AI perspectives.
 
+> **Meta note:** This project was built using itself. The council command was used to debate and refine its own architecture, protocols, and features. It's councils all the way down.
+
 ## Installation
 
 ### Prerequisites
@@ -11,8 +13,8 @@ A collaborative planning system between Claude Code and Gemini CLI. Run `/counci
 ### Install
 
 ```bash
-git clone https://github.com/user/aicouncil.git
-cd aicouncil
+git clone https://github.com/ibralyousef/claude-gemini-council.git
+cd claude-gemini-council
 ./install.sh
 ```
 
