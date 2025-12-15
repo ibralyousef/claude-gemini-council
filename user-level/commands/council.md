@@ -33,8 +33,10 @@ Parse in order:
 ## Protocol
 
 ### Phase 1: Initialize
+Note: All paths are relative to the current working directory. Ensure you're in the correct project root.
+
 1. Read memory files if they exist: `council/memory/decisions.md`, `council/memory/patterns.md`
-2. If `council/` doesn't exist, create structure:
+2. If `council/` doesn't exist, create structure in the current directory:
    - `council/GEMINI.md` (template: `# Project Context\n## Overview\n[Edit this]`)
    - `council/memory/decisions.md`, `council/memory/patterns.md`, `council/memory/agenda.md`
    - `council/sessions/`

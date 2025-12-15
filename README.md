@@ -45,6 +45,8 @@ The install script will:
 /council --consensus Database migration strategy
 ```
 
+> **Note**: Run `/council` from your project's root directory. Council files are created in Claude's current working directory.
+
 ## Stance Levels
 
 Control how critically Gemini challenges Claude's positions:
