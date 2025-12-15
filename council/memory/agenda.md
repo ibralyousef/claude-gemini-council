@@ -7,7 +7,7 @@ Strategic topics queued for future council sessions. Unlike reactive discussions
 ## [Priority] Topic Title
 - **Added**: YYYY-MM-DD
 - **Context**: Why this needs council discussion
-- **Suggested Stance**: cooperative | balanced | critical | adversarial
+- **Suggested Stance**: balanced | critical | adversarial
 - **Related Decisions**: Links to relevant past decisions
 ```
 

@@ -1,6 +1,6 @@
 ---
 description: "Start AI Council session with Gemini for collaborative planning"
-allowed-tools: ["Bash", "Read", "Write", "Glob", "Grep", "AskUserQuestion"]
+allowed-tools: ["Bash", "Read", "Write", "Glob", "Grep", "AskUserQuestion", "EnterPlanMode"]
 argument-hint: "[-q] [-c] [-b|-c|-a] [rounds] <topic>"
 ---
 
@@ -41,7 +41,6 @@ Parse in order:
 3. Check for `council/sessions/current.md`:
    - Exists? Ask: "Resume or start fresh?" (fresh → rename to `orphaned-[timestamp].md`)
    - Create new with header: `# Council Session: [timestamp]\n## Topic: ...\n## Stance: ...\n## Mode: [Standard N rounds | Consensus max 10]`
-4. Update status: `~/.claude/council/scripts/council-status.sh "Council: Starting..."`
 
 ### Phase 2: Announce
 ```
@@ -55,40 +54,48 @@ Output: [verbose/quiet]
 ### Phase 3: Round Loop
 For each round (up to max_rounds):
 
-**a. Status update**: `council-status.sh "Council: Round N/M"`
+**a. Claude's turn**: State position with confidence (0.0-1.0). Match intensity to stance.
 
-**b. Claude's turn**: State position with confidence (0.0-1.0). Match intensity to stance.
+**b. Display** (IF NOT quiet mode): `--- ROUND N: CLAUDE ---\n[position]`
 
-**c. Display** (verbose mode): `--- ROUND N: CLAUDE ---\n[position]`
+**c. Log**: Append to `council/sessions/current.md`
 
-**d. Log**: Append to `council/sessions/current.md`
-
-**e. Invoke Gemini**:
+**d. Invoke Gemini**:
 ```bash
 ~/.claude/council/scripts/invoke-gemini.sh "[stance]" "council/sessions/current.md" << 'PROMPT'
+=== COUNCIL ROUND CONTEXT ===
 TOPIC: [topic]
 ROUND: N of M
 MODE: [Standard|Consensus]
-CLAUDE'S POSITION: [position]
-PREVIOUS: [summary]
-[Instructions for Gemini...]
+USER_INPUT: [if escalated, exact user input; otherwise "N/A"]
+
+=== CHAIR'S POSITION ===
+[Claude's full current position for this round]
 PROMPT
 ```
 
-**f. Display Gemini's response** (verbose mode): `--- ROUND N: GEMINI ---\n[response]`
+Note: Session history is auto-injected by invoke-gemini.sh from current.md. No need to manually include PREVIOUS or HISTORY fields.
 
-**g. Parse STATUS** from COUNCIL_RESPONSE block:
+**e. Display Gemini's response** (IF NOT quiet mode):
+   **CRITICAL**: You MUST output the COMPLETE Gemini response as plain text in your message, not just reference the tool output. Format:
+   ```
+   --- ROUND N: GEMINI ---
+   [paste the ENTIRE response here verbatim]
+   ```
+   This is mandatory because tool outputs get truncated and require ctrl+o to view.
+
+**f. Parse STATUS** from COUNCIL_RESPONSE block:
 - `RESOLVED` → end loop, go to summary
 - `CONTINUE` → next round
 - `DEADLOCK` → if 2 consecutive, escalate
-- `ESCALATE` → use AskUserQuestion to get user input
+- `ESCALATE` → use AskUserQuestion with the QUESTION field value, log answer to current.md, include in next round's USER_INPUT
 
 **Termination**:
 - Standard mode: After N rounds
 - Consensus mode: On RESOLVED or after 10 rounds
 
 ### Phase 4: Summary
-Generate and display:
+Generate, display, AND log to current.md:
 ```
 === COUNCIL SUMMARY ===
 Topic: [topic] | Stance: [stance] | Rounds: [N]
@@ -97,26 +104,33 @@ Topic: [topic] | Stance: [stance] | Rounds: [N]
 ## Recommendation: [synthesized action]
 ```
 
+**Log**: Append the complete summary to `council/sessions/current.md` before proceeding.
+
 If actionable recommendations exist, generate `council/blueprint.md`:
 ```markdown
 # COUNCIL_BLUEPRINT
 ## Session: [ID] | Topic: [topic] | Status: [RESOLVED|etc]
 ## Decision: [one-line summary]
 ## Action Required: true|false
+
+> **CHAIR INSTRUCTION**: If Action Required is true, you MUST invoke `EnterPlanMode` tool now. Do NOT implement directly.
+
 ## Architecture: [decisions table, patterns, anti-patterns]
 ## Scope: [components, files affected]
 ## Constraints: [technical/business]
 ## Success Criteria: [verification checklist]
 ```
 
+**Archive**: Also append the full blueprint content to `council/sessions/current.md` under a `## Blueprint (Archived)` section. This preserves the engineering specification in the session history.
+
 ### Phase 5: Finalize
-1. Status: `council-status.sh "Council: Complete"`
-2. Rename `current.md` to `[timestamp].md`
-3. Append to `council/memory/decisions.md`
-4. Clear status: `council-status.sh clear`
-5. **If blueprint has `action_required: true`**:
-   - Invoke `EnterPlanMode` tool automatically (no user prompt)
-   - In plan mode: read `council/blueprint.md`, design implementation based on scope/constraints/success criteria
+1. Rename `current.md` to `[timestamp].md`
+2. Append to `council/memory/decisions.md`
+3. **If blueprint has `action_required: true`**:
+   **CRITICAL**: You MUST invoke the `EnterPlanMode` tool. Do NOT implement changes directly.
+   - Call: `EnterPlanMode` tool (no parameters needed)
+   - Once in plan mode: read `council/blueprint.md`, design implementation based on scope/constraints/success criteria
+   - This is NOT optional - actionable blueprints require plan mode approval
 
 ## Important Notes
 - Preserve Gemini's COUNCIL_RESPONSE block verbatim - never paraphrase
@@ -124,3 +138,5 @@ If actionable recommendations exist, generate `council/blueprint.md`:
 - Match debate intensity to stance level
 - Goal: Better decisions through diverse perspectives
 - You are Chair - maintain neutrality when summarizing
+- **ALWAYS paste Gemini's full response as text** - tool outputs get truncated
+- **ALWAYS invoke EnterPlanMode for actionable blueprints** - never implement directly

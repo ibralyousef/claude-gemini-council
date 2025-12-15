@@ -259,3 +259,20 @@ Each entry follows this structure:
 - **Rationale**: Architectural symmetry is a strong design goal; protocol-defined Chair role is agent-agnostic
 - **Dissent**: None - full consensus in 3 rounds
 - **Session**: council/sessions/2025-12-11-140000.md
+
+## 2025-12-15 - Cats vs Mice Evolutionary Comparison (Consensus)
+- **Topic**: cats vs mice, debate in a one sentence-long
+- **Stance**: balanced
+- **Decision**: Evolutionary success is multi-dimensional. Both mice (species-level resilience via reproductive velocity) and cats (individual-level sophistication via behavioral complexity) represent equally valid evolutionary optimizations for different selective pressures.
+- **Rationale**: Initial debate revealed that declaring a "winner" requires first defining success metrics. Mice excel at biomass, distribution, and geological resilience. Cats excel at complex behavior and environmental manipulation. Both strategies are evolutionarily triumphant within their optimization contexts.
+- **Dissent**: None - full consensus in 4 rounds
+- **Session**: council/sessions/2025-12-15-*.md
+
+## 2025-12-15 - Cats vs Mice Evolutionary Comparison - Adversarial (Consensus)
+- **Topic**: cats vs mice, debate in a one sentence-long
+- **Stance**: adversarial
+- **Decision**: "Superiority" is context-dependent. Cats win at K-selected individual behavioral complexity; Mice win at r-selected species resilience and extinction resistance. Both represent valid evolutionary peaks.
+- **Rationale**: Adversarial debate revealed that arguments centered on conflicting values (quality/complexity vs quantity/resilience) rather than factual disputes. Each strategy is optimized for different selective pressures and represents a local maximum on the fitness landscape.
+- **Dissent**: Philosophical disagreement persists on which metric matters more - Claude values individual sophistication, Gemini values species-level robustness
+- **Rounds to Consensus**: 4
+- **Session**: council/sessions/2025-12-15-*.md
