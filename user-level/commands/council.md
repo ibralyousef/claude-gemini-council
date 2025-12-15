@@ -123,7 +123,7 @@ If actionable recommendations exist, generate `council/blueprint.md`:
 ## Success Criteria: [verification checklist]
 ```
 
-**Archive**: Also append the full blueprint content to `council/sessions/current.md` under a `## Blueprint (Archived)` section. This preserves the engineering specification in the session history.
+**Archive**: Append the VERBATIM blueprint content (not a reference) to `council/sessions/current.md` under a `## Blueprint (Archived)` section. Do NOT write "See blueprint.md" - copy the actual content. blueprint.md is ephemeral and gets overwritten.
 
 ### Phase 5: Finalize
 1. Rename `current.md` to `[timestamp].md`
