@@ -1,30 +1,31 @@
 # COUNCIL_BLUEPRINT
-## Session: 2025-12-16-150000 | Topic: Improve README clarity | Status: RESOLVED
-## Decision: Restructure README with conceptual intro, example session, and simplified technical reference
+## Session: 2025-12-16-160000 | Topic: Interactive mode (-i) | Status: RESOLVED
+## Decision: Add interactive mode using AskUserQuestion for per-round user input
 ## Action Required: true
 
 > **CHAIR INSTRUCTION**: If Action Required is true, present user with implementation options (plan mode / implement directly / let user write).
 
 ## Architecture:
-| Section | Purpose | Content |
-|---------|---------|---------|
-| Why Two AIs? | Conceptual understanding | Roles, strengths, senate/executive model |
-| Quick Start | Get started fast | Existing commands, concise |
-| Example Session | Make it tangible | 2-round dialogue + COUNCIL_RESPONSE + blueprint |
-| How It Works | Technical overview | Protocol injection, session management, tool restrictions |
-| Reference | Detailed docs | Stance levels, commands, file structure, config |
+| Component | Decision | Rationale |
+|-----------|----------|-----------|
+| Input mechanism | AskUserQuestion only | Single path eliminates precedence ambiguity |
+| Question source | QUESTIONS_FOR_OTHER (primary) | Gemini drives user interaction via existing field |
+| Fallback 1 | KEY_POINTS disagreements | Scan for decision signals |
+| Fallback 2 | Generic "proceed?" | Graceful degradation |
+| Logging | "### USER INPUT (Round N)" | Consistent format in session log |
 
 ## Scope:
-- `README.md`: Major restructure - add 2 new sections, simplify 1 section
+- `user-level/commands/council.md`: Add `-i` flag parsing and interactive logic in Phase 3
 
 ## Constraints:
-- Keep README under ~400 lines (currently ~260)
-- Example should be realistic but concise
-- Don't lose essential technical details
+- Must use existing AskUserQuestion tool (1-4 questions, 2-4 options each)
+- Must log to current.md before asking
+- Must include response in next round's USER_INPUT field
 
 ## Success Criteria:
-- [ ] "Why Two AIs?" section explains conceptual model clearly
-- [ ] Example session shows both AI perspectives and COUNCIL_RESPONSE format
-- [ ] Example includes a blueprint
-- [ ] "How It Works" is simplified but retains key technical details
-- [ ] New users can understand the value proposition in <2 minutes
+- [ ] `-i` flag is parsed in argument list
+- [ ] After each Gemini response, AskUserQuestion is invoked (in -i mode)
+- [ ] Questions derived from QUESTIONS_FOR_OTHER when available
+- [ ] User response logged to current.md
+- [ ] Next round receives user input in context
+- [ ] Works with --consensus and other flags

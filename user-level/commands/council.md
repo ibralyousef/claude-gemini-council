@@ -1,7 +1,7 @@
 ---
 description: "Start AI Council session with Gemini for collaborative planning"
 allowed-tools: ["Bash", "Read", "Write", "Glob", "Grep", "AskUserQuestion", "EnterPlanMode"]
-argument-hint: "[-q] [--consensus] [balanced|critical|adversarial] [rounds] <topic>"
+argument-hint: "[-q] [-i] [--consensus] [balanced|critical|adversarial] [rounds] <topic>"
 ---
 
 # AI Council Session
@@ -11,10 +11,11 @@ Collaborative planning session with Gemini CLI. Two modes: Standard (fixed round
 ## Arguments
 Parse in order:
 1. `-q` / `--quiet` (optional): Suppress verbose output
-2. `--consensus` (optional): Loop until consensus (max 10 rounds)
-3. Stance (optional): `-b`/`balanced` | `-c`/`critical` | `-a`/`adversarial` (default: balanced)
-4. Rounds (optional): Number 1-10 (default: 3, ignored if consensus mode)
-5. Topic (required): Everything else
+2. `-i` / `--interactive` (optional): Prompt user for input after each round
+3. `--consensus` (optional): Loop until consensus (max 10 rounds)
+4. Stance (optional): `-b`/`balanced` | `-c`/`critical` | `-a`/`adversarial` (default: balanced)
+5. Rounds (optional): Number 1-10 (default: 3, ignored if consensus mode)
+6. Topic (required): Everything else
 
 **Input:** $ARGUMENTS
 
@@ -24,6 +25,7 @@ Parse in order:
 - `/council -a 5 Rewrite in Rust?` → adversarial, 5 rounds
 - `/council -q --consensus Database migration` → quiet, consensus mode
 - `/council -c 3 API design` → critical, 3 rounds
+- `/council -i -c 3 Feature prioritization` → critical, 3 rounds, interactive
 
 ## Stances (no cooperative - too soft)
 - **balanced** (`-b`): Fair critique, acknowledge pros/cons (default)
@@ -42,7 +44,7 @@ Note: All paths are relative to the current working directory. Ensure you're in 
    - `council/sessions/`
 3. Check for `council/sessions/current.md`:
    - Exists? Ask: "Resume or start fresh?" (fresh → rename to `orphaned-[timestamp].md`)
-   - Create new with header: `# Council Session: [timestamp]\n## Topic: ...\n## Stance: ...\n## Mode: [Standard N rounds | Consensus max 10]`
+   - Create new with header: `# Council Session: [timestamp]\n## Topic: ...\n## Stance: ...\n## Mode: [Standard N rounds | Consensus max 10]\n## Interactive: [Yes|No]`
 
 ### Phase 2: Announce
 ```
@@ -50,6 +52,7 @@ Note: All paths are relative to the current working directory. Ensure you're in 
 Topic: [topic]
 Stance: [stance]
 Mode: [Standard (N rounds) | Consensus (max 10)]
+Interactive: [Yes/No]
 Output: [verbose/quiet]
 ```
 
@@ -91,6 +94,18 @@ Note: Session history is auto-injected by invoke-gemini.sh from current.md. No n
 - `CONTINUE` → next round
 - `DEADLOCK` → if 2 consecutive, escalate
 - `ESCALATE` → use AskUserQuestion with the QUESTION field value, log answer to current.md, include in next round's USER_INPUT
+
+**g. Interactive mode** (IF `-i` flag set AND status is CONTINUE):
+   1. **Log placeholder**: Append `### USER INPUT (Round N):\n[pending]` to current.md
+   2. **Derive question**: Use this priority:
+      - Primary: `QUESTIONS_FOR_OTHER` field from COUNCIL_RESPONSE (if present)
+      - Fallback 1: Scan `KEY_POINTS` for disagreements/open items
+      - Fallback 2: Generic "Any input on this round's discussion?"
+   3. **Ask user**: Use `AskUserQuestion` with:
+      - Question derived above (max 4 questions)
+      - Options: 2-4 relevant choices based on the question, plus user can always select "Other" for custom input
+   4. **Update log**: Replace `[pending]` with user's actual response
+   5. **Include in next round**: Set USER_INPUT field to user's response for the next Gemini invocation
 
 **Termination**:
 - Standard mode: After N rounds

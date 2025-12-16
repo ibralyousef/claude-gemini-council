@@ -61,6 +61,9 @@ The install script will:
 
 # Consensus mode (continues until agreement, max 10 rounds)
 /council --consensus Database migration strategy
+
+# Interactive mode (user input after each round)
+/council -i critical API design discussion
 ```
 
 > **Note**: Run `/council` from your project's root directory. Council files are created in Claude's current working directory.
@@ -139,9 +142,11 @@ Control how critically Gemini challenges Claude's positions:
 Standard council session with fixed number of rounds, or consensus mode.
 
 **Arguments:**
+- `-q` / `--quiet` (optional): suppress verbose output
+- `-i` / `--interactive` (optional): prompt user for input after each round
+- `--consensus` (optional): continues until consensus is reached (max 10 rounds)
 - `level` (optional): balanced, critical, or adversarial
 - `rounds` (optional): number of discussion rounds (default: 3)
-- `--consensus` (optional): if present, continues until consensus is reached (max 10 rounds)
 - `topic` (required): what to discuss
 
 **Examples:**
@@ -151,6 +156,7 @@ Standard council session with fixed number of rounds, or consensus mode.
 /council 3 API design review
 /council Should we use Redis?
 /council --consensus Database migration strategy
+/council -i -c 3 Feature prioritization  # interactive mode
 ```
 
 ## File Structure
@@ -270,9 +276,10 @@ RETRY_DELAY=2
 
 1. **Use `adversarial` for important decisions** - Stress-test ideas before committing
 2. **Use `balanced` for brainstorming** - Fair critique while building on ideas
-3. **Check session logs** - Full transcripts saved in `./council/sessions/`
-4. **Edit GEMINI.md** - Better project context = better Gemini responses
-5. **Gemini can read files** - Ask it to verify claims about your codebase
+3. **Use `-i` for complex topics** - Interactive mode lets you steer the discussion after each round
+4. **Check session logs** - Full transcripts saved in `./council/sessions/`
+5. **Edit GEMINI.md** - Better project context = better Gemini responses
+6. **Gemini can read files** - Ask it to verify claims about your codebase
 
 ## Troubleshooting
 

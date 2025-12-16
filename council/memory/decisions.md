@@ -315,3 +315,16 @@ Each entry follows this structure:
 - **Rationale**: Current README lacks conceptual explanation and concrete examples. New users need to understand WHY before HOW.
 - **Dissent**: None - full consensus in 3 rounds
 - **Session**: council/sessions/2025-12-16-150000.md
+
+## 2025-12-16 - Interactive Mode (-i) (Consensus)
+- **Topic**: Add interactive mode with user input after each round
+- **Stance**: critical
+- **Decision**: Add `-i` / `--interactive` flag using AskUserQuestion for per-round user prompting
+  1. Use AskUserQuestion as ONLY input mechanism (no manual file editing path)
+  2. Question synthesis: QUESTIONS_FOR_OTHER (primary) → KEY_POINTS disagreements → fallback
+  3. Log user responses as "### USER INPUT (Round N): [response]"
+  4. Include in next round's USER_INPUT field to Gemini
+  5. Combinable with --consensus and other flags
+- **Rationale**: Single-path design eliminates precedence ambiguity. QUESTIONS_FOR_OTHER field allows Gemini to drive user interaction. Acceptable as Claude-specific feature under Claude-Only Chair architecture.
+- **Dissent**: None - full consensus in 3 rounds
+- **Session**: council/sessions/2025-12-16-160000.md
