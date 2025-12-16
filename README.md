@@ -4,6 +4,24 @@ A collaborative planning system between Claude Code and Gemini CLI. Run `/counci
 
 > **Meta note:** This project was built using itself. The council command was used to debate and refine its own architecture, protocols, and features. It's councils all the way down.
 
+## Why Two AIs?
+
+Better decisions come from diverse perspectives. AI Council leverages two different AI models in a structured debate:
+
+**Claude Code (Chair)**
+- Orchestrates the session and maintains the log
+- Has full tool access: file editing, plan mode, user questions
+- Executes decisions after council approval
+- Strengths: Deep integration, implementation capability, structured workflows
+
+**Gemini (Participant)**
+- Provides independent perspective on the same problem
+- Can read files and verify claims about the codebase
+- Challenges assumptions with a different training background
+- Strengths: Alternative viewpoint, claim verification, stress-testing ideas
+
+**The Model**: The council deliberates on WHAT to do and WHY. Then the Chair (Claude) implements HOW. Like a senate passing bills that an executive implements.
+
 ## Installation
 
 ### Prerequisites
@@ -46,6 +64,63 @@ The install script will:
 ```
 
 > **Note**: Run `/council` from your project's root directory. Council files are created in Claude's current working directory.
+
+## Example Session
+
+Here's a condensed council session on "Should we add Redis for caching?"
+
+**Round 1 - Claude** (Confidence: 0.7):
+> "Redis offers sub-millisecond reads and built-in expiration. But it adds operational complexity - another service to monitor, deploy, and secure. For a single-server app, in-memory caching might suffice."
+
+**Round 1 - Gemini**:
+> "I've checked your codebase - you're already using `node-cache` in 3 places (`api/cache.js`, `services/auth.js`, `utils/config.js`). Adding Redis would fragment your caching strategy. However, if you need cross-instance sharing for horizontal scaling, Redis becomes necessary. What's your scaling timeline?"
+
+```
+---COUNCIL_RESPONSE---
+STATUS: CONTINUE
+AGREEMENT: partial
+CONFIDENCE: 0.85
+KEY_POINTS:
+- Existing node-cache usage creates fragmentation risk
+- Redis only justified if horizontal scaling planned
+QUESTIONS_FOR_OTHER:
+- What is the scaling timeline?
+---END_COUNCIL_RESPONSE---
+```
+
+**Round 2 - Claude** (Confidence: 0.85):
+> "Good catch on the existing caching. Let's consolidate: If scaling within 6 months, migrate to Redis now. If not, standardize on node-cache first, then migrate later. This avoids premature optimization while keeping the path clear."
+
+**Round 2 - Gemini**:
+> "Agreed. Standardize first, scale later. The consolidation itself has value regardless of Redis."
+
+```
+---COUNCIL_RESPONSE---
+STATUS: RESOLVED
+AGREEMENT: full
+CONFIDENCE: 0.95
+KEY_POINTS:
+- Consolidate existing caching before adding new infrastructure
+- Redis decision deferred until scaling timeline is clear
+ACTION_ITEMS:
+- [ ] Audit all caching usage and standardize on node-cache
+- [ ] Document scaling triggers that would justify Redis
+---END_COUNCIL_RESPONSE---
+```
+
+**Resulting Blueprint**:
+```markdown
+# COUNCIL_BLUEPRINT
+## Decision: Consolidate caching before considering Redis
+## Action Required: true
+
+## Scope:
+- `api/cache.js`, `services/auth.js`, `utils/config.js`
+
+## Success Criteria:
+- [ ] Single caching abstraction used throughout codebase
+- [ ] Scaling triggers documented
+```
 
 ## Stance Levels
 
@@ -112,74 +187,29 @@ Created automatically on first run in any project:
 
 ## How It Works
 
-### Claude as Chair (Default)
-
-1. **Claude as Chair**: Claude orchestrates the discussion and maintains the session log
-2. **Gemini as Participant + Investigator**: Gemini responds according to assigned stance, can use tools to verify claims
-3. **Protocol Injection**: `invoke-gemini.sh` injects:
-   - Universal protocol (`~/.claude/council/protocol.md`)
-   - Stance instructions
-   - Project context (`./council/GEMINI.md`)
-   - Memory files (`./council/memory/*.md`)
-4. **Structured Responses**: Gemini returns COUNCIL_RESPONSE blocks for automated processing
-
-### Gemini as Chair (Bidirectional Mode)
-
-The council supports bidirectional chairing. Either AI can run as Chair:
-
-**From Gemini CLI:**
-```bash
-# Basic invocation
-echo "Should we refactor the auth module?" | ~/.claude/council/scripts/invoke-claude.sh balanced
-
-# With output file logging
-echo "Database migration strategy" | ~/.claude/council/scripts/invoke-claude.sh critical council/sessions/current.md
+```
+User runs /council → Claude (Chair) states position → Gemini responds with critique
+    ↓                                                           ↓
+Rounds repeat until RESOLVED or max rounds reached
+    ↓
+Summary generated → Blueprint created (if actionable) → Chair implements
 ```
 
-When Gemini chairs:
-1. **Gemini as Chair**: Gemini orchestrates the discussion and maintains the session log
-2. **Claude as Participant + Investigator**: Claude responds according to assigned stance, with read-only tools (Read, Glob, Grep)
-3. **Protocol Injection**: `invoke-claude.sh` injects the same context structure
-4. **Same session directory**: All sessions stored in `./council/sessions/` regardless of Chair
+**Key concepts:**
 
-**Symmetric Tool Restrictions:**
-| Role | Chair | Participant |
-|------|-------|-------------|
-| Tools | Full access | Read-only (investigation only) |
+1. **Protocol Injection**: Each invocation automatically injects context (protocol, project info, memory files) so Gemini has full awareness
 
-This ensures the Chair maintains control over file modifications while participants can still verify claims.
+2. **Structured Responses**: Gemini returns `COUNCIL_RESPONSE` blocks with STATUS, AGREEMENT, KEY_POINTS, etc. (see example above)
 
-## COUNCIL_RESPONSE Format
+3. **Session Management**: Active session stored in `council/sessions/current.md`, then archived with timestamp
 
-Gemini ends each response with:
+4. **Tool Restrictions**: Chair (Claude) has full tool access; participant (Gemini) has read-only access to verify claims
 
-```
----COUNCIL_RESPONSE---
-STATUS: CONTINUE | RESOLVED | DEADLOCK | ESCALATE
-AGREEMENT: none | partial | full
-CONFIDENCE: [0.0-1.0]
-MISSING_CONTEXT: [list]
-KEY_POINTS:
-- [points]
-ACTION_ITEMS:
-- [ ] [actions]
-QUESTIONS_FOR_OTHER:
-- [questions]
----END_COUNCIL_RESPONSE---
-```
-
-**STATUS values:**
+**STATUS values in COUNCIL_RESPONSE:**
 - `CONTINUE` - Discussion should continue
 - `RESOLVED` - Consensus reached, session can end
 - `DEADLOCK` - Fundamental disagreement (2 consecutive = escalate to user)
 - `ESCALATE` - Pause and request user input
-
-## Escalation
-
-When Gemini sets `STATUS: ESCALATE` or 2 consecutive `DEADLOCK`s occur:
-1. Session pauses
-2. User is prompted for input
-3. Both AIs read user response and continue
 
 ## Project Context
 

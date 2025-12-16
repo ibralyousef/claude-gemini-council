@@ -1,4 +1,12 @@
 #!/bin/bash
+# =============================================================================
+# EXPERIMENTAL: This script is not currently functional.
+# Preserved for potential future use when Gemini CLI gains required tools.
+# The current council protocol requires Claude-specific tools (EnterPlanMode,
+# AskUserQuestion) that are not available when Claude acts as participant.
+# See: council/memory/decisions.md (2025-12-16 - Claude-Only Chair)
+# =============================================================================
+#
 # invoke-claude.sh - Wrapper for Claude CLI invocation with protocol injection
 # Usage: echo "prompt" | ./invoke-claude.sh [stance] [output_file]
 #        ./invoke-claude.sh [stance] [output_file] < prompt.txt

@@ -291,3 +291,27 @@ Each entry follows this structure:
 - **Dissent**: None - full consensus
 - **Rounds to Consensus**: 5
 - **Session**: council/sessions/2025-12-15-120000.md
+
+## 2025-12-16 - Claude-Only Chair (Consensus)
+- **Topic**: Remove Gemini CLI as Chair candidate - Claude Code only due to capability gap
+- **Stance**: critical
+- **Decision**: Default to Claude-only Chair; retain Gemini-Chair architecture as experimental
+  1. Document Claude as sole active Chair in README.md
+  2. Keep `invoke-claude.sh` with "EXPERIMENTAL" header (preserved for future use)
+  3. No active development on Gemini-Chair features
+  4. Add "Minimum Viable Chair" (MVC) conceptual definition to patterns.md
+- **Rationale**: Current protocol requires Claude-specific tools (EnterPlanMode, AskUserQuestion, Write) that Gemini CLI lacks. User preference for simplification respected while preserving architectural hooks.
+- **Dissent**: None - full consensus in 4 rounds
+- **Session**: council/sessions/2025-12-16-143000.md
+
+## 2025-12-16 - README Clarity Improvements (Consensus)
+- **Topic**: Improve README clarity - explain Claude/Gemini roles, strengths, and add example session
+- **Stance**: balanced
+- **Decision**: Restructure README with conceptual intro, example session, and simplified technical reference
+  1. Add "Why Two AIs?" section explaining roles and strengths
+  2. Add "Example Session" with dialogue + COUNCIL_RESPONSE + blueprint
+  3. Simplify "How It Works" while retaining key technical details
+  4. New structure: Concept → Quick Start → Example → How It Works → Reference
+- **Rationale**: Current README lacks conceptual explanation and concrete examples. New users need to understand WHY before HOW.
+- **Dissent**: None - full consensus in 3 rounds
+- **Session**: council/sessions/2025-12-16-150000.md

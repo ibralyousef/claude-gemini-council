@@ -31,6 +31,23 @@ The `invoke-gemini.sh` script automatically injects this content into Gemini's c
 - Memory files (decisions.md, patterns.md) are injected via invoke-gemini.sh
 - Session logs are maintained at council/sessions/current.md during active sessions
 
+## Minimum Viable Chair (MVC) - Conceptual Reference
+<!-- Defined 2025-12-16 to preserve architectural symmetry for future bidirectional chairing -->
+Core Chair responsibilities that any AI must be able to perform:
+1. **Moderate**: Control turn-taking, enforce round limits, announce session state
+2. **Log**: Write session progress to `council/sessions/current.md`
+3. **Escalate**: Detect ESCALATE/DEADLOCK status and prompt user for input
+4. **Invoke**: Call the participant AI with proper context injection
+5. **Summarize**: Generate COUNCIL_SUMMARY at session end
+6. **Persist**: Append to decisions.md, rename session file
+
+Current Claude-specific extensions (not required for MVC):
+- `EnterPlanMode`: Transition to implementation planning
+- `AskUserQuestion`: Structured user prompts with options
+- `TodoWrite`: Task tracking during implementation
+
+This distinction exists to enable future Gemini-as-Chair capability when its toolset expands.
+
 ---
 
 <!-- New patterns will be appended below this line -->

@@ -115,7 +115,7 @@ If actionable recommendations exist, generate `council/blueprint.md`:
 ## Decision: [one-line summary]
 ## Action Required: true|false
 
-> **CHAIR INSTRUCTION**: If Action Required is true, you MUST invoke `EnterPlanMode` tool now. Do NOT implement directly.
+> **CHAIR INSTRUCTION**: If Action Required is true, present user with implementation options (plan mode / implement directly / let user write).
 
 ## Architecture: [decisions table, patterns, anti-patterns]
 ## Scope: [components, files affected]
@@ -129,10 +129,14 @@ If actionable recommendations exist, generate `council/blueprint.md`:
 1. Rename `current.md` to `[timestamp].md`
 2. Append to `council/memory/decisions.md`
 3. **If blueprint has `action_required: true`**:
-   **CRITICAL**: You MUST invoke the `EnterPlanMode` tool. Do NOT implement changes directly.
-   - Call: `EnterPlanMode` tool (no parameters needed)
-   - Once in plan mode: read `council/blueprint.md`, design implementation based on scope/constraints/success criteria
-   - This is NOT optional - actionable blueprints require plan mode approval
+   Use `AskUserQuestion` to present implementation options:
+
+   **Options:**
+   - **"Enter plan mode"** → Invoke `EnterPlanMode` tool, then design implementation based on blueprint scope/constraints/success criteria
+   - **"Start implementing"** → Implement the blueprint directly without entering plan mode. Read `council/blueprint.md` and execute based on scope/constraints/success criteria
+   - **"Let me write"** → Stop and let the user take control of implementation
+
+   Handle each choice accordingly. Do NOT halt on any valid selection.
 
 ## Important Notes
 - Preserve Gemini's COUNCIL_RESPONSE block verbatim - never paraphrase
@@ -141,4 +145,4 @@ If actionable recommendations exist, generate `council/blueprint.md`:
 - Goal: Better decisions through diverse perspectives
 - You are Chair - maintain neutrality when summarizing
 - **ALWAYS paste Gemini's full response as text** - tool outputs get truncated
-- **ALWAYS invoke EnterPlanMode for actionable blueprints** - never implement directly
+- **For actionable blueprints**: Present three options (plan mode / implement directly / let user write)
