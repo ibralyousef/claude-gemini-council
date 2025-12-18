@@ -36,7 +36,7 @@ The `invoke-gemini.sh` script automatically injects this content into Gemini's c
 Core Chair responsibilities that any AI must be able to perform:
 1. **Moderate**: Control turn-taking, enforce round limits, announce session state
 2. **Log**: Write session progress to `council/sessions/current.md`
-3. **Escalate**: Detect ESCALATE/DEADLOCK status and prompt user for input
+3. **Handle User Input**: Use interactive mode (`-i`) for user input during sessions
 4. **Invoke**: Call the participant AI with proper context injection
 5. **Summarize**: Generate COUNCIL_SUMMARY at session end
 6. **Persist**: Append to decisions.md, rename session file

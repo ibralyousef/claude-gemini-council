@@ -328,3 +328,29 @@ Each entry follows this structure:
 - **Rationale**: Single-path design eliminates precedence ambiguity. QUESTIONS_FOR_OTHER field allows Gemini to drive user interaction. Acceptable as Claude-specific feature under Claude-Only Chair architecture.
 - **Dissent**: None - full consensus in 3 rounds
 - **Session**: council/sessions/2025-12-16-160000.md
+
+## 2025-12-18 - Council Resume Feature (Consensus)
+- **Topic**: Should we implement a council-revive/resume feature to restore archived sessions as current?
+- **Stance**: adversarial
+- **Decision**: Implement `--resume <session-id>` flag with copy-and-append mechanics
+  1. `--resume` flag added to `/council` command (Path B - integrated flag, not separate command)
+  2. Topic LOCKED/inherited from resumed session; Stance/Mode OVERRIDABLE; Quiet/Interactive ADDITIVE
+  3. Session mechanics: Copy archived session to current.md, append `## RESUMED` header with timestamp/reason
+  4. Round counter resets (new rounds are 1, 2, 3... but history preserved above)
+  5. decisions.md uses Amendment format: `## [Date] - Amendment to [Original Topic Summary]` with linked reference
+  6. Old session file remains unchanged; new file gets new timestamp
+- **Rationale**: Decisions need evolution mechanisms. Append-only ledger (git/blockchain pattern) preserves immutability while enabling amendments. "Resume" is cleaner UX than "fork" semantics though functionally equivalent.
+- **Dissent**: None - full consensus in 4 rounds
+- **Session**: council/sessions/2025-12-18-120000.md
+
+## 2025-12-18 - Feature Pruning (Consensus)
+- **Topic**: Remove unused deadlock/escalate and balanced stance features?
+- **Stance**: adversarial
+- **Decision**: Remove all three features and default to Critical stance
+  1. **Remove DEADLOCK and ESCALATE** - Interactive mode (`-i`) supersedes need for special status codes
+  2. **Remove Balanced stance** - Replicates default LLM behavior; Council exists for friction/scrutiny
+  3. **Default to Critical** - Rigor, not hostility. Council's minimum value proposition
+  4. **Two-stance system**: Critical (default) and Adversarial (opt-in with `-a`)
+- **Rationale**: YAGNI - zero usage of DEADLOCK/ESCALATE in 20+ sessions. Balanced provides "comfort not insight." Council differentiates from standard chat through scrutiny.
+- **Dissent**: None - full consensus in 2 rounds
+- **Session**: council/sessions/2025-12-18-165500.md

@@ -9,7 +9,7 @@ Collaborative planning between Claude Code and Gemini CLI.
 - `/council-agenda list` - View strategic agenda
 
 ## Stances
-`-b` balanced | `-c` critical | `-a` adversarial
+`-c` critical (default) | `-a` adversarial
 
 ## Project Structure
 - `user-level/commands/` - Slash command definitions (symlinked to ~/.claude/commands/)

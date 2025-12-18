@@ -50,7 +50,7 @@ The install script will:
 ## Quick Start
 
 ```bash
-# Basic usage (balanced stance, 3 rounds)
+# Basic usage (critical stance, 3 rounds)
 /council Should we use Redis or Postgres?
 
 # With stance level
@@ -131,8 +131,7 @@ Control how critically Gemini challenges Claude's positions:
 
 | Level | Behavior |
 |-------|----------|
-| `balanced` | Fair critique, acknowledge good and bad (default) |
-| `critical` | Find flaws, question assumptions, demand evidence |
+| `critical` | Find flaws, question assumptions, demand evidence (default) |
 | `adversarial` | Devil's advocate, stress-test everything, relentless scrutiny |
 
 ## Commands
@@ -145,7 +144,7 @@ Standard council session with fixed number of rounds, or consensus mode.
 - `-q` / `--quiet` (optional): suppress verbose output
 - `-i` / `--interactive` (optional): prompt user for input after each round
 - `--consensus` (optional): continues until consensus is reached (max 10 rounds)
-- `level` (optional): balanced, critical, or adversarial
+- `level` (optional): critical or adversarial (default: critical)
 - `rounds` (optional): number of discussion rounds (default: 3)
 - `topic` (required): what to discuss
 
@@ -214,8 +213,6 @@ Summary generated → Blueprint created (if actionable) → Chair implements
 **STATUS values in COUNCIL_RESPONSE:**
 - `CONTINUE` - Discussion should continue
 - `RESOLVED` - Consensus reached, session can end
-- `DEADLOCK` - Fundamental disagreement (2 consecutive = escalate to user)
-- `ESCALATE` - Pause and request user input
 
 ## Project Context
 
@@ -275,7 +272,7 @@ RETRY_DELAY=2
 ## Tips
 
 1. **Use `adversarial` for important decisions** - Stress-test ideas before committing
-2. **Use `balanced` for brainstorming** - Fair critique while building on ideas
+2. **Use default `critical` for most discussions** - Rigorous analysis without being hostile
 3. **Use `-i` for complex topics** - Interactive mode lets you steer the discussion after each round
 4. **Check session logs** - Full transcripts saved in `./council/sessions/`
 5. **Edit GEMINI.md** - Better project context = better Gemini responses

@@ -1,31 +1,39 @@
 # COUNCIL_BLUEPRINT
-## Session: 2025-12-16-160000 | Topic: Interactive mode (-i) | Status: RESOLVED
-## Decision: Add interactive mode using AskUserQuestion for per-round user input
+## Session: 2025-12-18T165500 | Topic: Feature Pruning | Status: RESOLVED
+## Decision: Remove unused Council features (DEADLOCK, ESCALATE, Balanced) and default to Critical stance
 ## Action Required: true
 
-> **CHAIR INSTRUCTION**: If Action Required is true, present user with implementation options (plan mode / implement directly / let user write).
+> **CHAIR INSTRUCTION**: If Action Required is true, you MUST invoke `EnterPlanMode` tool now. Do NOT implement directly.
 
-## Architecture:
-| Component | Decision | Rationale |
-|-----------|----------|-----------|
-| Input mechanism | AskUserQuestion only | Single path eliminates precedence ambiguity |
-| Question source | QUESTIONS_FOR_OTHER (primary) | Gemini drives user interaction via existing field |
-| Fallback 1 | KEY_POINTS disagreements | Scan for decision signals |
-| Fallback 2 | Generic "proceed?" | Graceful degradation |
-| Logging | "### USER INPUT (Round N)" | Consistent format in session log |
+## Architecture
+| Component | Change |
+|-----------|--------|
+| Status Codes | Remove DEADLOCK, ESCALATE. Keep: RESOLVED, CONTINUE |
+| Stances | Remove Balanced. Keep: Critical (default), Adversarial |
+| Default | Critical (was: Balanced) |
 
-## Scope:
-- `user-level/commands/council.md`: Add `-i` flag parsing and interactive logic in Phase 3
+## Patterns
+- YAGNI: Features with zero usage over 20+ sessions are dead code
+- Interactive mode supersedes special status codes
 
-## Constraints:
-- Must use existing AskUserQuestion tool (1-4 questions, 2-4 options each)
-- Must log to current.md before asking
-- Must include response in next round's USER_INPUT field
+## Anti-Patterns
+- Keeping "safety valves" that never trigger
+- Providing "balanced" option that replicates default LLM behavior
 
-## Success Criteria:
-- [ ] `-i` flag is parsed in argument list
-- [ ] After each Gemini response, AskUserQuestion is invoked (in -i mode)
-- [ ] Questions derived from QUESTIONS_FOR_OTHER when available
-- [ ] User response logged to current.md
-- [ ] Next round receives user input in context
-- [ ] Works with --consensus and other flags
+## Scope
+| File | Changes |
+|------|---------|
+| `user-level/council/protocol.md` | Remove Balanced stance, remove DEADLOCK/ESCALATE from STATUS values, remove QUESTION field |
+| `user-level/commands/council.md` | Update default to critical, remove balanced from stances, update examples, remove deadlock/escalate logic from Phase 3f |
+| `user-level/council/scripts/invoke-gemini.sh` | Change default STANCE to "critical", remove balanced case from instruction function |
+
+## Constraints
+- None identified
+
+## Success Criteria
+- [ ] DEADLOCK and ESCALATE removed from protocol STATUS values
+- [ ] Balanced stance removed from all files
+- [ ] Default stance is Critical in all files
+- [ ] invoke-gemini.sh defaults to critical instructions
+- [ ] Examples in council.md reflect new defaults
+- [ ] No references to removed features remain

@@ -1,7 +1,7 @@
 ---
 description: "Start AI Council session with Gemini for collaborative planning"
 allowed-tools: ["Bash", "Read", "Write", "Glob", "Grep", "AskUserQuestion", "EnterPlanMode"]
-argument-hint: "[-q] [-i] [--consensus] [balanced|critical|adversarial] [rounds] <topic>"
+argument-hint: "[-q] [-i] [--consensus] [critical|adversarial] [rounds] <topic>"
 ---
 
 # AI Council Session
@@ -13,23 +13,22 @@ Parse in order:
 1. `-q` / `--quiet` (optional): Suppress verbose output
 2. `-i` / `--interactive` (optional): Prompt user for input after each round
 3. `--consensus` (optional): Loop until consensus (max 10 rounds)
-4. Stance (optional): `-b`/`balanced` | `-c`/`critical` | `-a`/`adversarial` (default: balanced)
+4. Stance (optional): `-c`/`critical` | `-a`/`adversarial` (default: critical)
 5. Rounds (optional): Number 1-10 (default: 3, ignored if consensus mode)
 6. Topic (required): Everything else
 
 **Input:** $ARGUMENTS
 
 **Examples:**
-- `/council Should we use Redis?` → balanced, 3 rounds
+- `/council Should we use Redis?` → critical, 3 rounds
 - `/council --consensus -a Auth architecture` → adversarial, consensus mode
 - `/council -a 5 Rewrite in Rust?` → adversarial, 5 rounds
-- `/council -q --consensus Database migration` → quiet, consensus mode
+- `/council -q --consensus Database migration` → quiet, critical, consensus mode
 - `/council -c 3 API design` → critical, 3 rounds
 - `/council -i -c 3 Feature prioritization` → critical, 3 rounds, interactive
 
-## Stances (no cooperative - too soft)
-- **balanced** (`-b`): Fair critique, acknowledge pros/cons (default)
-- **critical** (`-c`): Find flaws, demand evidence
+## Stances
+- **critical** (`-c`): Find flaws, demand evidence (default)
 - **adversarial** (`-a`): Devil's advocate, stress-test everything
 
 ## Protocol
@@ -92,8 +91,6 @@ Note: Session history is auto-injected by invoke-gemini.sh from current.md. No n
 **f. Parse STATUS** from COUNCIL_RESPONSE block:
 - `RESOLVED` → end loop, go to summary
 - `CONTINUE` → next round
-- `DEADLOCK` → if 2 consecutive, escalate
-- `ESCALATE` → use AskUserQuestion with the QUESTION field value, log answer to current.md, include in next round's USER_INPUT
 
 **g. Interactive mode** (IF `-i` flag set AND status is CONTINUE):
    1. **Log placeholder**: Append `### USER INPUT (Round N):\n[pending]` to current.md

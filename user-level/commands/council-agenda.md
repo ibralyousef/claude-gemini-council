@@ -62,7 +62,7 @@ Move an item to "Parked" status.
      ## [Priority] Topic Title
      - **Added**: YYYY-MM-DD
      - **Context**: [User can edit this]
-     - **Suggested Stance**: balanced
+     - **Suggested Stance**: critical
      - **Related Decisions**: None yet
      ```
    - Confirm addition

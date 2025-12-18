@@ -15,7 +15,7 @@
 # process table exposure of sensitive session content.
 #
 # Arguments:
-#   stance - Optional: balanced|critical|adversarial (default: balanced)
+#   stance - Optional: critical|adversarial (default: critical)
 #   output_file - Optional: File to append output to (in addition to stdout)
 #
 # Context injection order:
@@ -50,7 +50,7 @@ RETRY_DELAY=2
 
 # Read prompt from stdin (avoids ARG_MAX and process table exposure)
 PROMPT=$(cat)
-STANCE="${1:-balanced}"
+STANCE="${1:-critical}"
 OUTPUT_FILE="$2"
 
 # Validate input
@@ -62,14 +62,6 @@ fi
 # Define stance instructions
 get_stance_instructions() {
     case "$1" in
-        balanced)
-            echo "STANCE: Balanced
-- Fair critique of strengths and weaknesses
-- Acknowledge good points explicitly
-- Challenge weak arguments respectfully
-- Aim for well-rounded evaluation
-- Balance support with constructive criticism"
-            ;;
         critical)
             echo "STANCE: Critical
 - Actively look for flaws and gaps
@@ -90,7 +82,14 @@ get_stance_instructions() {
 - Be relentless but professional"
             ;;
         *)
-            echo "STANCE: Balanced (default)"
+            # Default to critical
+            echo "STANCE: Critical
+- Actively look for flaws and gaps
+- Question assumptions and evidence
+- Push back on weak justifications
+- Demand rigorous reasoning
+- Don't accept claims without evidence
+- Be thorough in your analysis"
             ;;
     esac
 }
