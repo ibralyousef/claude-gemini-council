@@ -354,3 +354,15 @@ Each entry follows this structure:
 - **Rationale**: YAGNI - zero usage of DEADLOCK/ESCALATE in 20+ sessions. Balanced provides "comfort not insight." Council differentiates from standard chat through scrutiny.
 - **Dissent**: None - full consensus in 2 rounds
 - **Session**: council/sessions/2025-12-18-165500.md
+
+## 2025-12-20 - Interactive Mode Skip Option (Consensus)
+- **Topic**: Add "skip" option in interactive mode (-i) to let user ignore a round
+- **Stance**: critical
+- **Decision**: Add two skip options to interactive mode prompts
+  1. **"Skip this round"** - Per-round skip, logs `[skipped]`, sets USER_INPUT to `[user skipped]`
+  2. **"Disable prompts for remaining rounds"** - Disables interactive mode for rest of session, logs `[disabled interactive mode]`
+  3. **Distinct log values** - `[user skipped]`, `[disabled interactive mode]`, and `N/A` for auditability
+  4. **State via session log** - Claude reads `current.md` to track disabled state (implicit, not variables)
+- **Rationale**: User autonomy - sometimes users want to observe debate without intervening. Gemini pushed for "disable remaining" option to avoid tedium of repeated skips in long consensus sessions.
+- **Dissent**: None - full consensus in 3 rounds
+- **Session**: council/sessions/2025-12-20-120000.md

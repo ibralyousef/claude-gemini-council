@@ -92,7 +92,7 @@ Note: Session history is auto-injected by invoke-gemini.sh from current.md. No n
 - `RESOLVED` → end loop, go to summary
 - `CONTINUE` → next round
 
-**g. Interactive mode** (IF `-i` flag set AND status is CONTINUE):
+**g. Interactive mode** (IF `-i` flag set AND status is CONTINUE AND no previous `[disabled interactive mode]` in session log):
    1. **Log placeholder**: Append `### USER INPUT (Round N):\n[pending]` to current.md
    2. **Derive question**: Use this priority:
       - Primary: `QUESTIONS_FOR_OTHER` field from COUNCIL_RESPONSE (if present)
@@ -100,9 +100,13 @@ Note: Session history is auto-injected by invoke-gemini.sh from current.md. No n
       - Fallback 2: Generic "Any input on this round's discussion?"
    3. **Ask user**: Use `AskUserQuestion` with:
       - Question derived above (max 4 questions)
-      - Options: 2-4 relevant choices based on the question, plus user can always select "Other" for custom input
-   4. **Update log**: Replace `[pending]` with user's actual response
-   5. **Include in next round**: Set USER_INPUT field to user's response for the next Gemini invocation
+      - Options: 2-4 relevant choices based on the question + "Skip this round" + "Disable prompts for remaining rounds"
+      - (User can always select "Other" for custom input)
+   4. **Handle response**:
+      - If "Skip this round": Update log with `[skipped]`, set USER_INPUT to `[user skipped]`
+      - If "Disable prompts for remaining rounds": Update log with `[disabled interactive mode]`, skip Phase 3g for all subsequent rounds
+      - Otherwise: Update log with user's actual response, set USER_INPUT to response
+   5. **Include in next round**: Set USER_INPUT field accordingly for the next Gemini invocation
 
 **Termination**:
 - Standard mode: After N rounds
