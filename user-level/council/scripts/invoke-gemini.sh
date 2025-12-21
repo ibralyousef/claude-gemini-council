@@ -168,7 +168,7 @@ fi
 # Invoke Gemini with retry logic
 # Use --allowed-tools whitelist for read-only access (Council = Senate, not Executor)
 # Gemini can read/search but NOT modify files or run shell commands
-ALLOWED_TOOLS="read_file,list_directory,glob,search_file_content,web_search"
+ALLOWED_TOOLS="read_file,list_directory,glob,search_file_content,google_web_search"
 attempt=1
 while [ $attempt -le $MAX_RETRIES ]; do
     # Run Gemini with read-only tool whitelist, stdin for prompt (avoids ARG_MAX + process table exposure)
