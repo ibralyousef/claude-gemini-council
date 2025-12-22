@@ -1,7 +1,7 @@
 ---
 description: "Start AI Council session with Gemini for collaborative planning"
 allowed-tools: ["Bash", "Read", "Write", "Glob", "Grep", "AskUserQuestion", "EnterPlanMode"]
-argument-hint: "[-q] [-i] [--consensus] [critical|adversarial] [rounds] <topic>"
+argument-hint: "[--resume <session>] [-q] [-i] [--consensus] [critical|adversarial] [rounds] <topic>"
 ---
 
 # AI Council Session
@@ -10,12 +10,15 @@ Collaborative planning session with Gemini CLI. Two modes: Standard (fixed round
 
 ## Arguments
 Parse in order:
-1. `-q` / `--quiet` (optional): Suppress verbose output
-2. `-i` / `--interactive` (optional): Prompt user for input after each round
-3. `--consensus` (optional): Loop until consensus (max 10 rounds)
-4. Stance (optional): `-c`/`critical` | `-a`/`adversarial` (default: critical)
-5. Rounds (optional): Number 1-10 (default: 3, ignored if consensus mode)
-6. Topic (required): Everything else
+1. `--resume <session>` (optional): Resume an archived session. Provide path (e.g., `council/sessions/2025-12-18-120000.md`) or session ID (e.g., `2025-12-18-120000`). Topic is inherited; other flags can override stance/mode.
+2. `-q` / `--quiet` (optional): Suppress verbose output
+3. `-i` / `--interactive` (optional): Prompt user for input after each round
+4. `--consensus` (optional): Loop until consensus (max 10 rounds)
+5. Stance (optional): `-c`/`critical` | `-a`/`adversarial` (default: critical)
+6. Rounds (optional): Number 1-10 (default: 3, ignored if consensus mode)
+7. Topic (required unless --resume): Everything else
+
+> **No arguments?** If invoked without a topic (and without `--resume`), the council will display your strategic agenda. Use `/council-agenda add` to queue topics.
 
 **Input:** $ARGUMENTS
 
@@ -26,6 +29,9 @@ Parse in order:
 - `/council -q --consensus Database migration` → quiet, critical, consensus mode
 - `/council -c 3 API design` → critical, 3 rounds
 - `/council -i -c 3 Feature prioritization` → critical, 3 rounds, interactive
+- `/council --resume 2025-12-18-120000` → resume session, inherit topic
+- `/council --resume council/sessions/2025-12-18-120000.md -a` → resume with adversarial stance
+- `/council` → (no args) display strategic agenda
 
 ## Stances
 - **critical** (`-c`): Find flaws, demand evidence (default)
@@ -36,6 +42,13 @@ Parse in order:
 ### Phase 1: Initialize
 Note: All paths are relative to the current working directory. Ensure you're in the correct project root.
 
+0. **If no arguments provided** (no topic, no --resume):
+   - Check if `council/memory/agenda.md` exists
+   - If yes: Read and display agenda items (same format as `/council-agenda list`)
+   - Display: "Select a topic from your agenda or run `/council <topic>` directly"
+   - Exit (do not proceed to session creation)
+   - If no agenda exists: Show help message with usage examples and exit
+
 1. Read memory files if they exist: `council/memory/decisions.md`, `council/memory/patterns.md`
 2. If `council/` doesn't exist, create structure in the current directory:
    - `council/GEMINI.md` (template: `# Project Context\n## Overview\n[Edit this]`)
@@ -44,6 +57,24 @@ Note: All paths are relative to the current working directory. Ensure you're in 
 3. Check for `council/sessions/current.md`:
    - Exists? Ask: "Resume or start fresh?" (fresh → rename to `orphaned-[timestamp].md`)
    - Create new with header: `# Council Session: [timestamp]\n## Topic: ...\n## Stance: ...\n## Mode: [Standard N rounds | Consensus max 10]\n## Interactive: [Yes|No]`
+
+4. **If `--resume` flag present**:
+   - Locate session file: resolve path or session ID to `council/sessions/[ID].md`
+   - If not found: Display error "Session not found: [path]" and exit
+   - Read session file, extract Topic/Stance/Mode from headers
+   - Copy session content to `council/sessions/current.md`
+   - Append to current.md:
+     ```
+     ---
+
+     ## RESUMED
+     **Original Session**: [session ID]
+     **Resumed At**: [timestamp]
+     **Reason**: Continuing discussion
+     ```
+   - Lock topic from session (cannot be overridden)
+   - Allow flag overrides for stance/mode/rounds
+   - Skip normal "Resume or start fresh?" prompt (step 3)
 
 ### Phase 2: Announce
 ```
@@ -143,7 +174,16 @@ If actionable recommendations exist, generate `council/blueprint.md`:
 
 ### Phase 5: Finalize
 1. Rename `current.md` to `[timestamp].md`
-2. Append to `council/memory/decisions.md`
+2. Append to `council/memory/decisions.md`:
+   - **If resumed session**: Use Amendment format:
+     ```markdown
+     ## [YYYY-MM-DD] - Amendment to [Original Topic from Session Header]
+     - **Resumed From**: [original session ID]
+     - **Topic**: [topic]
+     - **Decision**: [summary]
+     ...
+     ```
+   - **If new session**: Use standard format
 3. **If blueprint has `action_required: true`**:
    Use `AskUserQuestion` to present implementation options:
 

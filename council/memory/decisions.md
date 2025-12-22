@@ -388,3 +388,16 @@ Each entry follows this structure:
 - **Rationale**: Blueprint (WHAT/WHY) ≠ Execution Plan (HOW). The "double prompt" is intentional friction for the rigorous path. Option 2 already provides frictionless alternative. Solution is clarity, not elimination.
 - **Dissent**: None - full consensus in 3 rounds
 - **Session**: council/sessions/2025-12-22-120000.md
+
+## 2025-12-22 - Missing Low-Effort Improvements (Consensus)
+- **Topic**: Am I missing something very useful, very low effort here?
+- **Stance**: critical
+- **Decision**: Two low-effort, high-value features identified:
+  1. **P0**: Implement `--resume` flag (decided Dec 18, never implemented - governance failure)
+  2. **P1**: Agenda Bridge - if `/council` has no args, show `/council-agenda list`
+- **Rejected Ideas**:
+  - Session search wrapper (use `grep -r` directly - avoid wrapper bloat)
+  - Git add automation (sessions are gitignored by design)
+- **Rationale**: Council must execute its own decisions. `--resume` was legislated but not implemented. Agenda Bridge connects strategy (agenda) with execution (session).
+- **Dissent**: None - full consensus in 2 rounds
+- **Session**: council/sessions/2025-12-22-130000.md
