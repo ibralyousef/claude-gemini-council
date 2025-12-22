@@ -366,3 +366,25 @@ Each entry follows this structure:
 - **Rationale**: User autonomy - sometimes users want to observe debate without intervening. Gemini pushed for "disable remaining" option to avoid tedium of repeated skips in long consensus sessions.
 - **Dissent**: None - full consensus in 3 rounds
 - **Session**: council/sessions/2025-12-20-120000.md
+
+## 2025-12-21 - Gemini Tool Name Error Fix (Consensus)
+- **Topic**: Review of Claude's fix for Gemini tool name errors (`run_shell_command` not found)
+- **Stance**: critical
+- **Decision**: Fix approved - two changes correctly address the issue
+  1. Added explicit tool list to `protocol.md` with CRITICAL warning against using non-existent tools
+  2. Fixed `web_search` → `google_web_search` in `invoke-gemini.sh` to match Gemini's actual registry
+- **Rationale**: Gemini verified both files contain correct tool names; explicit tool list prevents future hallucination
+- **Dissent**: None - full consensus in 1 round
+- **Session**: council/sessions/2025-12-21-120000.md
+
+## 2025-12-22 - EnterPlanMode Double Prompt Fix (Consensus)
+- **Topic**: EnterPlanMode tool causing double prompt after blueprint with action_required: true
+- **Stance**: critical
+- **Decision**: Improve option labeling in Phase 5 to clarify trade-off between rigorous planning (with confirmation) and immediate execution (frictionless)
+- **Changes Required**:
+  1. Rename "Enter plan mode" → "Enter Plan Mode (Generate detailed steps)"
+  2. Rename "Start implementing" → "Execute Immediately (Skip Plan Mode)"
+  3. Add inline note explaining EnterPlanMode's confirmation is intentional
+- **Rationale**: Blueprint (WHAT/WHY) ≠ Execution Plan (HOW). The "double prompt" is intentional friction for the rigorous path. Option 2 already provides frictionless alternative. Solution is clarity, not elimination.
+- **Dissent**: None - full consensus in 3 rounds
+- **Session**: council/sessions/2025-12-22-120000.md

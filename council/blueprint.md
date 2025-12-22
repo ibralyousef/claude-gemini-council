@@ -1,30 +1,41 @@
 # COUNCIL_BLUEPRINT
-## Session: 2025-12-20-120000 | Topic: Interactive mode skip option | Status: RESOLVED
-## Decision: Add "Skip this round" and "Disable prompts for remaining rounds" options to interactive mode
+## Session: 2025-12-22-120000 | Topic: EnterPlanMode double prompt fix | Status: RESOLVED
+## Decision: Improve option labeling in Phase 5 to clarify the trade-off between rigorous planning (with confirmation) and immediate execution (frictionless)
 ## Action Required: true
 
 > **CHAIR INSTRUCTION**: If Action Required is true, present user with implementation options (plan mode / implement directly / let user write).
 
 ## Architecture
-| Decision | Pattern | Anti-Pattern |
-|----------|---------|--------------|
-| State via session log | Implicit state in `current.md` | Bash variables or external state files |
-| Distinct log values | `[user skipped]`, `[disabled interactive mode]`, `N/A` | Single `N/A` for all cases |
-| Two skip options | Per-round + disable remaining | Only per-round (tedious) |
+| Component | Decision |
+|-----------|----------|
+| EnterPlanMode | Keep as-is (system tool, provides value) |
+| AskUserQuestion | Update option labels |
+| Phase 5 flow | Add explanatory note |
+
+**Patterns:**
+- Blueprint = WHAT/WHY (Council), Execution Plan = HOW (EnterPlanMode)
+- "Fast Lane" (Option 2) exists for frictionless flow
+- Clarity over elimination
+
+**Anti-patterns:**
+- Removing EnterPlanMode entirely (loses structured planning capability)
+- Accepting double-prompt without explanation (confuses users)
 
 ## Scope
-- **Files affected**: `user-level/commands/council.md`
-- **Components**: Phase 3g (Interactive mode section)
+**Files affected:**
+- `user-level/commands/council.md` (Phase 5 section, lines 147-155)
+
+**Changes:**
+1. Rename "Enter plan mode" → "Enter Plan Mode (Generate detailed steps)"
+2. Rename "Start implementing" → "Execute Immediately (Skip Plan Mode)"
+3. Add inline note after Options block explaining EnterPlanMode's confirmation is intentional
 
 ## Constraints
-- Must maintain backward compatibility with existing `-i` flag behavior
-- Must work within Claude's single-conversation context model
-- Options should appear after derived question options, not before
+- Cannot modify EnterPlanMode tool behavior (system tool)
+- Must preserve all three implementation options
+- Changes are documentation/labeling only - no code changes
 
 ## Success Criteria
-- [ ] "Skip this round" option appears in interactive prompts
-- [ ] "Disable prompts for remaining rounds" option appears in interactive prompts
-- [ ] Session logs show `[skipped]` when user skips a round
-- [ ] Session logs show `[disabled interactive mode]` when user disables prompts
-- [ ] Subsequent rounds skip Phase 3g after disable is selected
-- [ ] USER_INPUT field uses correct distinct values
+- [ ] Phase 5 options renamed with descriptive labels
+- [ ] Explanatory note added clarifying double-prompt is intentional
+- [ ] Symlinks updated if ~/.claude/commands/council.md differs from repo

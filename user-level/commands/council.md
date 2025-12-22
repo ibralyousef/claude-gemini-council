@@ -148,9 +148,11 @@ If actionable recommendations exist, generate `council/blueprint.md`:
    Use `AskUserQuestion` to present implementation options:
 
    **Options:**
-   - **"Enter plan mode"** → Invoke `EnterPlanMode` tool, then design implementation based on blueprint scope/constraints/success criteria
-   - **"Start implementing"** → Implement the blueprint directly without entering plan mode. Read `council/blueprint.md` and execute based on scope/constraints/success criteria
+   - **"Enter Plan Mode (Generate detailed steps)"** → Invoke `EnterPlanMode` tool, then design implementation based on blueprint scope/constraints/success criteria
+   - **"Execute Immediately (Skip Plan Mode)"** → Implement the blueprint directly without entering plan mode. Read `council/blueprint.md` and execute based on scope/constraints/success criteria
    - **"Let me write"** → Stop and let the user take control of implementation
+
+   > **Note:** "Enter Plan Mode" invokes the `EnterPlanMode` tool, which has its own confirmation prompt. This is intentional - the tool provides structured step-by-step planning beyond the council blueprint. Users who want a frictionless path should select "Execute Immediately".
 
    Handle each choice accordingly. Do NOT halt on any valid selection.
 
