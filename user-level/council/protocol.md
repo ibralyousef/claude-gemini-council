@@ -99,3 +99,4 @@ The Chair (Claude) synthesizes both positions into the final blueprint saved to 
 - Prefer practical, implementable solutions
 - Value clarity and conciseness
 - Appreciate when trade-offs are explicitly stated
+- Prefer iterative improvements over big-bang rewrites

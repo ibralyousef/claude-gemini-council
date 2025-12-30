@@ -1,27 +1,33 @@
 # COUNCIL_BLUEPRINT
-## Session: 2025-12-22-130000 | Topic: Missing low-effort improvements | Status: RESOLVED
-## Decision: Implement Resume and Agenda Bridge features
+## Session: 2025-12-30-120000 | Topic: Pattern utility review and Chair history immutability | Status: RESOLVED
+## Decision: Dissolve patterns.md and add Immutability Mandate to prevent Chair from destructively summarizing session logs
 ## Action Required: true
 
 > **CHAIR INSTRUCTION**: If Action Required is true, present user with implementation options (plan mode / implement directly / let user write).
 
 ## Architecture
-- **Resume Feature**:
-  - Modify `council.md` to accept `--resume <session_file>` flag.
-  - Logic: Copy `<session_file>` content to `current.md`. Append `## RESUMED` header. Set topic from file.
-  - Constraint: Must handle file paths or session IDs.
-- **Agenda Bridge**:
-  - Modify `council.md` argument parsing.
-  - Logic: If `$TOPIC` is empty, check `agenda.md`.
-  - If agenda exists, invoke `/council-agenda list`.
-  - If no agenda, show help.
+| Component | Change | Rationale |
+|-----------|--------|-----------|
+| `council/memory/patterns.md` | DELETE | Mixed-concern "junk drawer" - content migrated elsewhere |
+| `user-level/council/protocol.md` | ADD User Preferences section | Migrate "iterative improvements" preference |
+| `council/GEMINI.md` | ADD MVC + Domain Knowledge | Architectural reference belongs in context injection file |
+| `user-level/commands/council.md` | ADD Immutability Mandate | Prevent Chair from replacing history with summaries |
 
 ## Scope
-`user-level/commands/council.md`
+- Files affected: 4
+  - `council/memory/patterns.md` (delete)
+  - `user-level/council/protocol.md` (edit)
+  - `council/GEMINI.md` (edit)
+  - `user-level/commands/council.md` (edit)
 
 ## Constraints
-Preserve existing flag handling.
+- Immutability Mandate must be prominent (not buried in notes)
+- Token limit handling: archival rotation permitted, destructive summarization prohibited
+- MVC definition is architectural reference, not operational rule
 
 ## Success Criteria
-- [ ] `/council --resume council/sessions/2025-12-18-*.md` restores that session context
-- [ ] `/council` (no args) displays the agenda list instead of generic help
+- [ ] `patterns.md` deleted
+- [ ] "Prefers iterative improvements over big-bang rewrites" appears in protocol.md User Preferences
+- [ ] MVC definition and Domain Knowledge appear in GEMINI.md
+- [ ] Immutability Mandate appears prominently in council.md Important Notes section
+- [ ] No duplicate content across files

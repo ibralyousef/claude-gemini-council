@@ -401,3 +401,20 @@ Each entry follows this structure:
 - **Rationale**: Council must execute its own decisions. `--resume` was legislated but not implemented. Agenda Bridge connects strategy (agenda) with execution (session).
 - **Dissent**: None - full consensus in 2 rounds
 - **Session**: council/sessions/2025-12-22-130000.md
+
+## 2025-12-30 - Pattern Utility and Chair Immutability (Consensus)
+- **Topic**: patterns.md utility review and Chair history immutability
+- **Stance**: adversarial
+- **Decision**:
+  1. **Dissolve `patterns.md`**: File is a "junk drawer" mixing architecture, protocol, and preferences. Migrate content and delete.
+  2. **Add Immutability Mandate**: Chair MUST NEVER destructively summarize session logs. Summaries are APPENDED, not replaced.
+- **Migration Plan**:
+  - DELETE `council/memory/patterns.md`
+  - MIGRATE "Prefers iterative improvements over big-bang rewrites" → `protocol.md` (User Preferences)
+  - MIGRATE MVC definition + Domain Knowledge → `GEMINI.md`
+  - DISCARD: Anti-patterns (implicit in protocol), Priority Stacking (general heuristic)
+- **Immutability Mandate**:
+  > The Chair MUST NEVER delete, overwrite, or destructively summarize the session log (`current.md`) during an active session. All summaries must be APPENDED. If token limits require rotation, archive first (`archive-[timestamp].md`).
+- **Rationale**: User observed Chair replacing history with summary. Existing "preserve verbatim" rule was too narrow (protected COUNCIL_RESPONSE blocks but implied rest was summarizing-fodder).
+- **Dissent**: None - full consensus in 3 rounds
+- **Session**: council/sessions/2025-12-30-120000.md

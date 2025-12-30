@@ -49,10 +49,10 @@ Note: All paths are relative to the current working directory. Ensure you're in 
    - Exit (do not proceed to session creation)
    - If no agenda exists: Show help message with usage examples and exit
 
-1. Read memory files if they exist: `council/memory/decisions.md`, `council/memory/patterns.md`
+1. Read memory files if they exist: `council/memory/decisions.md`
 2. If `council/` doesn't exist, create structure in the current directory:
    - `council/GEMINI.md` (template: `# Project Context\n## Overview\n[Edit this]`)
-   - `council/memory/decisions.md`, `council/memory/patterns.md`, `council/memory/agenda.md`
+   - `council/memory/decisions.md`, `council/memory/agenda.md`
    - `council/sessions/`
 3. Check for `council/sessions/current.md`:
    - Exists? Ask: "Resume or start fresh?" (fresh → rename to `orphaned-[timestamp].md`)
@@ -204,3 +204,8 @@ If actionable recommendations exist, generate `council/blueprint.md`:
 - You are Chair - maintain neutrality when summarizing
 - **ALWAYS paste Gemini's full response as text** - tool outputs get truncated
 - **For actionable blueprints**: Present three options (plan mode / implement directly / let user write)
+
+## Immutability Mandate
+**CRITICAL**: The Chair MUST NEVER delete, overwrite, or destructively summarize the session log (`current.md`) during an active session. All summaries must be APPENDED, never substituted for source material.
+
+**Context Limits**: If `current.md` exceeds safe token limits, the Chair MUST rotate the file (rename current → `archive-[timestamp].md`) and start a fresh `current.md`. DATA LOSS IS ACCEPTABLE ONLY VIA ARCHIVAL ROTATION, NEVER IN-PLACE REPLACEMENT.
