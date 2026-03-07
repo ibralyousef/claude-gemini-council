@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # compile-round.sh — Concatenate individual position files into round-N.md
-# Usage: compile-round.sh <session-dir> <round-number> <topic> <"N of M"> <chair-position-file>
+# Usage: compile-round.sh <session-dir> <round-number> <topic> <"N of M">
 set -euo pipefail
 
 SESSION_DIR="$1"
 ROUND="$2"
 TOPIC="$3"
 ROUND_OF="$4"
-CHAIR_FILE="$5"
+CHAIR_FILE="${SESSION_DIR}/chair-round-${ROUND}.md"
 
 OUTPUT="${SESSION_DIR}/round-${ROUND}.md"
 TMPFILE="${SESSION_DIR}/.round-${ROUND}.tmp"
@@ -18,13 +18,18 @@ if [[ ! -f "$CHAIR_FILE" ]]; then
   exit 1
 fi
 
-# Collect position files (exclude chair file)
+# Collect all round-N.md files, split into participant files (exclude chair)
 shopt -s nullglob
-POSITION_FILES=("${SESSION_DIR}"/*-round-"${ROUND}".md)
+ALL_FILES=("${SESSION_DIR}"/*-round-"${ROUND}".md)
 shopt -u nullglob
 
+POSITION_FILES=()
+for f in "${ALL_FILES[@]}"; do
+  [[ "$f" != "$CHAIR_FILE" ]] && POSITION_FILES+=("$f")
+done
+
 if [[ ${#POSITION_FILES[@]} -eq 0 ]]; then
-  echo "Error: No position files found matching *-round-${ROUND}.md in ${SESSION_DIR}" >&2
+  echo "Error: No participant position files found matching *-round-${ROUND}.md in ${SESSION_DIR}" >&2
   exit 1
 fi
 

@@ -104,7 +104,7 @@ Note: All paths are relative to the current working directory. Ensure you're in 
    - Use `TeamCreate` with name `"council-session"`
    - Read `user-level/council/participant-protocol.md` for the base protocol
    - Read `council/memory/decisions.md` if it has content (entries matching `^## [0-9]`)
-   - **Chair forms Round 1 position BEFORE spawning agents** (see Phase 3a). This position is embedded in the spawn prompt so agents can begin immediately.
+   - Spawn all agents first (below). Chair forms its own Round 1 position concurrently after spawning — see Phase 3a. Do NOT embed the Chair's position in agent spawn prompts.
    - For each participant (1 through N), spawn using `Agent` tool:
      - `name`: `"{persona}"` (e.g., `pragmatist`, `skeptic`, `architect`)
      - `team_name`: `"council-session"`
@@ -133,7 +133,6 @@ Note: All paths are relative to the current working directory. Ensure you're in 
        TOPIC: [topic]
        ROUND: 1 of [M]
        MODE: Consensus
-       CHAIR'S POSITION: [Chair's Round 1 position from Phase 3a]
 
        === INSTRUCTIONS ===
        You are the {persona} in a council session about: [topic]
@@ -141,7 +140,7 @@ Note: All paths are relative to the current working directory. Ensure you're in 
        Participants: [N total]
 
        ROUND 1 IS ACTIVE. Begin your analysis immediately:
-       1. Form your position on the topic, engaging with the Chair's position above
+       1. Form your independent position on the topic
        2. Write your position to: [absolute path]/council/sessions/current/{persona}-round-1.md
        3. Send POSITION_WRITTEN to the Chair via SendMessage
        For subsequent rounds, wait for ROUND_COMPLETE signals from the Chair.
@@ -182,14 +181,14 @@ Participants: [N] ([persona-1], [persona-2], ...)
 For each round (up to max_rounds):
 
 **a. Chair's turn**: State position with confidence (0.0-1.0). Match intensity to stance.
-- **Round 1 only**: The Chair forms this position BEFORE spawning agents (Phase 1 step 5). It is embedded in the spawn prompt. Agents begin immediately — no Round 1 SendMessage needed.
+- **Round 1 only**: After spawning agents, the Chair forms its own position independently (no peeking at agent work) and writes to `chair-round-1.md` — then step c is already done for Round 1.
 
 **b. Display**: `--- ROUND N: CHAIR ---\n[position]`
 
-**c. Write Chair position to temp file**: Write Chair's position to `council/sessions/current/chair-position-{N}.txt`. This file is consumed by the compile script in step e.
+**c. Write Chair position**: Write Chair's position to `council/sessions/current/chair-round-{N}.md`. (For Round 1, this is done concurrently after spawning — skip this step in Round 1.)
 
 **d. Signal participants**:
-- **Round 1**: Agents already have context from spawn prompt. Wait for all POSITION_WRITTEN pings.
+- **Round 1**: Chair writes its own position to `chair-round-1.md` concurrently while agents work. Wait for all POSITION_WRITTEN pings.
 - **Round 2+**: Send `ROUND_COMPLETE` signal to ALL participants simultaneously via `SendMessage`:
   ```
   type: "message"
@@ -213,10 +212,9 @@ bash user-level/scripts/compile-round.sh \
   [absolute path]/council/sessions/current \
   [N] \
   "[topic]" \
-  "[N of M]" \
-  [absolute path]/council/sessions/current/chair-position-{N}.txt
+  "[N of M]"
 ```
-The script assembles `round-N.md` atomically (header + Chair position + all participant positions + synthesis placeholder), then deletes the individual position files and Chair temp file.
+The script auto-detects `chair-round-{N}.md`, assembles `round-N.md` atomically (header + Chair position + all participant positions + synthesis placeholder), then deletes the individual position files including the Chair file.
 
 **f. Read compiled round and display**:
 Read `council/sessions/current/round-N.md` (post-compilation).
