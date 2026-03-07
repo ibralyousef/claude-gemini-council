@@ -3,11 +3,10 @@
 Collaborative planning using Claude Code agent teams.
 
 ## Commands
-- `/council <topic>` - Standard session (3 rounds, 2 participants)
-- `/council --consensus <topic>` - Loop until consensus
-- `/council -a 5 <topic>` - Adversarial, 5 rounds
+- `/council <topic>` - Consensus session (max 10 rounds, 2 participants)
+- `/council -a 5 <topic>` - Adversarial, max 5 rounds
 - `/council -n 3 <topic>` - 3 participants
-- `/council -n 4 -a --consensus <topic>` - 4 adversarial participants, consensus
+- `/council -n 4 -a <topic>` - 4 adversarial participants
 - `/council-agenda list` - View strategic agenda
 
 ## Stances

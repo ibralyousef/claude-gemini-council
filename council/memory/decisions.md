@@ -418,3 +418,78 @@ Each entry follows this structure:
 - **Rationale**: User observed Chair replacing history with summary. Existing "preserve verbatim" rule was too narrow (protected COUNCIL_RESPONSE blocks but implied rest was summarizing-fodder).
 - **Dissent**: None - full consensus in 3 rounds
 - **Session**: council/sessions/2025-12-30-120000.md
+
+## 2026-03-07 - Parallel Round Execution & Persona Enrichment (Consensus)
+- **Topic**: Improve council system — robust participant descriptions, parallel execution, no middleman
+- **Stance**: adversarial
+- **Decision**: Two improvements adopted; one user request (direct file writes) redirected to architecturally safe equivalent:
+  1. **Parallel Messaging**: Chair sends round context to ALL participants simultaneously (no sequential loop). Collects ALL responses before logging any. Eliminates ordering bias without granting participants Write access.
+  2. **Inline Persona Enrichment**: Expand persona definitions from 1 sentence to 3-4 sentences + tendency-framed signature question ("You tend to ask: ..."). Stay inline in council.md — no separate files.
+  3. **Verbatim Relay Mandate**: Chair MUST relay prior-round positions verbatim in context messages. No summarization or editorialization. Addresses "no middleman" spirit.
+  4. **ROUND N SYNTHESIS**: Chair appends brief addendum after logging all positions noting convergence/divergence. Addendum only — never replaces source positions.
+  5. **Context structure change**: "OTHER PARTICIPANTS THIS ROUND" → "ALL PARTICIPANT POSITIONS FROM PREVIOUS ROUND"
+- **Rejected**:
+  - Direct file writes by participants (guaranteed race conditions, breaks read-only restriction)
+  - Round-robin ordering (redundant with parallel messaging)
+  - Default rounds 3→4 (scope creep)
+  - Separate persona files (reverses Protocol Consolidation decision)
+- **Rationale**: Parallel messaging achieves the user's goals (simultaneous, unbiased participation) while preserving all architectural invariants. The "no middleman" concern was about information loss, not architecture — solved by verbatim relay mandate.
+- **Dissent**: Default rounds 3→4 proposed by architect only; rejected by all others
+- **Rounds to Consensus**: 3
+- **Session**: council/sessions/2026-03-07-000849.md
+
+## 2026-03-07 - File-Based Council Architecture (Session-as-Folder) (Consensus)
+- **Topic**: Replace monolithic current.md with session-as-folder architecture and lightweight SendMessage signals
+- **Stance**: critical
+- **Decision**: Session-as-folder adopted with Chair-only writes and pointer-based SendMessage
+  1. **Session-as-Folder**: Active session = `council/sessions/current/` folder. Renamed to `[timestamp]/` at finalize.
+  2. **Per-Round Files**: `round-N.md` written atomically by Chair after ALL responses collected (barrier pattern).
+  3. **Chair Writes All Files**: Participants remain read-only. Write tool not path-scoped → blast radius unacceptable.
+  4. **Lightweight SendMessage**: Signal + file path + brief summary. NO verbatim relay. Context savings inbound only.
+  5. **Participants MUST Read Prior Round File**: `council/sessions/current/round-{N-1}.md` — mandatory, not advisory.
+  6. **Two Formats Permanently**: Old single-file sessions coexist with new folders. No migration. `--resume` detects by file-vs-directory.
+  7. **--resume**: Copy `[timestamp]/` → `council/sessions/current/`, add `resumed.md` marker. Continue numbering.
+  8. **Session artifacts**: `summary.md`, `blueprint.md` in folder. `session.md` at close (full concatenation: header + rounds + summary + blueprint).
+- **Rejected**:
+  - Git worktrees (over-engineering, no write contention exists with Chair-only writes)
+  - Eliminating SendMessage (SDK is event-driven, not polling-based)
+  - Participant Write access (Write tool not path-scoped)
+  - Per-participant files (per-round is correct unit of coherence)
+- **Rationale**: Context overflow was caused by Chair relaying verbatim megablocks inline. Fix is decoupling content (files) from coordination (SendMessage signals). Participants pull prior positions from files; messages are signals only.
+- **Rounds to Consensus**: 3
+- **Session**: council/sessions/2026-03-07-003029.md
+
+## 2026-03-07 - Protocol Simplification (Consensus)
+- **Topic**: Protocol scrutiny — simplify /council command options, make consensus default, remove -q, add new modes, define when Chair should AskUserQuestion, minimize friction
+- **Stance**: critical
+- **Decision**: Simplify protocol by removing 3 flags (--consensus, -q, -i), making consensus the only mode, and replacing interactive mode with 3 mandatory AskUserQuestion triggers
+- **Changes**:
+  1. **Remove --consensus**: All sessions are consensus (early-exit on RESOLVED, default max 10 rounds)
+  2. **Remove -q/--quiet**: 6 touchpoints of dead code eliminated
+  3. **Remove -i/--interactive**: Replaced with mandatory AskUserQuestion triggers:
+     - (a) Participant QUESTIONS_FOR_OTHER directed at user
+     - (b) Same KEY_POINTS conflict + no AGREEMENT movement across 2 consecutive rounds
+     - (c) Any participant confidence < 0.5 + non-empty MISSING_CONTEXT
+     - Suppression: user says "stop asking" → all triggers suppressed
+  4. **No new stances**: Two stances (-c, -a) sufficient. Exploratory = category error, devil's-advocate overlaps persona
+  5. **New syntax**: `/council [--resume <session>] [-n N] [-c|-a] [N] <topic>`
+  6. **Fix path bug**: Line 111 ~/.claude/council/ → user-level/council/
+- **Rationale**: Protocol accumulated 5 optional flags for a tool used primarily in consensus mode with verbose output. ~60% reduction in flag surface area. Mandatory triggers are protocol-driven (mechanical) rather than Chair-discretionary.
+- **Dissent**: None — full consensus in 3 rounds (unanimous RESOLVED at 0.93 confidence)
+- **Session**: council/sessions/2026-03-07-010000/
+
+## 2026-03-07 - File-Based Agent Communication Protocol (Consensus)
+- **Topic**: Fine-tune mandate for file-based agent communication — agents write position files independently, Chair compiles round files
+- **Stance**: critical
+- **Decision**: Implement file-based position writing by participants with Chair compilation, signal-only messaging, and spawn-time independence
+  1. **Participant Write access granted**: Agents write position files to `council/sessions/current/{persona}-round-{N}.md` using absolute paths. One Write call per round, position file only.
+  2. **Chair compiles round files**: Chair reads individual position files, composes `round-N.md` with synthesis via single atomic Write call. No separate concatenation script.
+  3. **Verification before cleanup**: Chair reads back `round-N.md` to verify integrity, then deletes individual position files via Bash rm.
+  4. **Spawn-time independence**: Chair forms Round 1 position BEFORE spawning agents. R1 position embedded in spawn prompt. Agents begin immediately.
+  5. **Signal-only SendMessage**: POSITION_WRITTEN (agent->Chair), ROUND_COMPLETE with path (Chair->agent), USER_INPUT_NEEDED, RESOLVED. No content in messages.
+  6. **File naming convention**: `{persona}-round-{N}.md` (lowercase, hyphenated) in session folder.
+  7. **Participant tools**: Write + Read + Glob + Grep allowed. Edit and Bash remain forbidden.
+- **Accepted Risk**: User explicitly accepted unscoped Write access blast radius. Write tool is NOT path-scoped — mitigated by naming convention, absolute paths, protocol contract, and one-Write-per-round constraint. Residual risk: agent could write to arbitrary filesystem paths if prompt compliance fails.
+- **Rationale**: User mandated file-based communication as hard requirement. Architecture cleanly separates data plane (files) from control plane (messages). Chair remains single authoritative writer of round files (Immutability Mandate preserved). File-based offers advantages: no message size limits, inspectable during round, debuggable post-mortem.
+- **Dissent**: None — full consensus in 3 rounds (confidence range 0.88-0.92)
+- **Session**: council/sessions/2026-03-07-011500/
