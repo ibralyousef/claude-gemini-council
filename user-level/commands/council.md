@@ -1,6 +1,6 @@
 ---
 description: "Start AI Council session with agent team for collaborative planning"
-allowed-tools: ["Read", "Write", "Glob", "Grep", "Bash", "AskUserQuestion", "EnterPlanMode", "TeamCreate", "TeamDelete", "SendMessage", "Task"]
+allowed-tools: ["Read", "Write", "Glob", "Grep", "Bash", "AskUserQuestion", "ExitPlanMode", "TeamCreate", "TeamDelete", "SendMessage", "Task"]
 argument-hint: "[--resume <session>] [-n N] [-c|-a] [N] <topic>"
 ---
 
@@ -280,12 +280,28 @@ Blueprint format:
 ## Decision: [one-line summary]
 ## Action Required: true|false
 
-> **CHAIR INSTRUCTION**: If Action Required is true, present user with implementation options (plan mode / implement directly / let user write).
+> **CHAIR INSTRUCTION**: If Action Required is true, present user with implementation options (plan approval with permissions / implement immediately / let user write).
 
-## Architecture: [decisions table, patterns, anti-patterns]
-## Scope: [components, files affected]
-## Constraints: [technical/business]
-## Success Criteria: [verification checklist]
+## Context
+[Why this change is being made — the problem, what prompted it, the intended outcome. Synthesized from council discussion.]
+
+## Implementation Plan
+[Ordered steps. Each step includes:]
+1. Step description
+   - File path(s): `path/to/file`
+   - What to change (specific enough to execute)
+   - Existing functions/utilities to reuse (with file paths)
+
+## Files to Modify
+- `path/to/file1.md` — [what changes]
+- `path/to/file2.sh` — [what changes]
+
+## Constraints
+- [technical/business constraints from council discussion]
+
+## Verification
+- [ ] [How to test each change end-to-end]
+- [ ] [Run commands, expected outcomes]
 ```
 
 (`summary.md` and `blueprint.md` are preserved in the session folder and included in Phase 5 concatenation — no separate archiving needed.)
@@ -314,11 +330,13 @@ Blueprint format:
    Use `AskUserQuestion` to present implementation options:
 
    **Options:**
-   - **"Enter Plan Mode (Generate detailed steps)"** → Invoke `EnterPlanMode` tool, then design implementation based on blueprint scope/constraints/success criteria
-   - **"Execute Immediately (Skip Plan Mode)"** → Implement the blueprint directly without entering plan mode. Read `council/blueprint.md` and execute based on scope/constraints/success criteria
-   - **"Let me write"** → Stop and let the user take control of implementation
+   - **"Approve Plan (with tool permissions)"** → The blueprint IS the plan — no re-planning needed. Chair writes `council/blueprint.md` to the plan file path, then calls `ExitPlanMode` with `allowedPrompts` derived from blueprint scope. The user gets the standard plan-approval UX: review the plan, approve/reject, clear context, and auto-accept controls.
+   - **"Implement Immediately"** → Execute blueprint directly without plan approval. Read `council/blueprint.md` and implement based on scope/constraints/verification.
+   - **"Let me write"** → Stop and let the user take control of implementation.
 
-   > **Note:** "Enter Plan Mode" invokes the `EnterPlanMode` tool, which has its own confirmation prompt. This is intentional - the tool provides structured step-by-step planning beyond the council blueprint. Users who want a frictionless path should select "Execute Immediately".
+   **`allowedPrompts` derivation**: If the blueprint scope includes shell scripts or commands to run, include `{"tool": "Bash", "prompt": "run shell scripts"}`. If it includes test verification steps, include `{"tool": "Bash", "prompt": "run tests"}`. Always include prompts matching the blueprint's verification section.
+
+   > **Note:** "Approve Plan" calls `ExitPlanMode`, which gives the user the same controls as any plan-mode exit: clear context, auto-accept edits, and granular Bash permissions. This replaces the old `EnterPlanMode` option which redundantly started a new planning cycle.
 
    Handle each choice accordingly. Do NOT halt on any valid selection.
 
@@ -329,7 +347,7 @@ Blueprint format:
 - Goal: Better decisions through diverse perspectives
 - You are Chair - maintain neutrality when summarizing
 - **ALWAYS paste each participant's full response as text** - tool outputs get truncated
-- **For actionable blueprints**: Present three options (plan mode / implement directly / let user write)
+- **For actionable blueprints**: Present three options (plan approval with permissions / implement immediately / let user write)
 - **Participants are spawned ONCE** at session start and messaged each round — do NOT re-spawn per round
 - **Parallel within a round**: all participants write position files independently. No participant sees another's current-round position until the Chair compiles `round-N.md`.
 - **File-based data, signal-based coordination**: Participants write positions to `{persona}-round-{N}.md`, then send `POSITION_WRITTEN` signal. Chair sends `ROUND_COMPLETE` with path. Messages carry signals only — never position content.
