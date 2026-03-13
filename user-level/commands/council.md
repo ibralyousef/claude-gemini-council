@@ -144,6 +144,11 @@ Note: All paths are relative to the current working directory. Ensure you're in 
        2. Write your position to: [absolute path]/council/sessions/current/{persona}-round-1.md
        3. Send POSITION_WRITTEN to the Chair via SendMessage
        For subsequent rounds, wait for ROUND_COMPLETE signals from the Chair.
+
+       === TOOLS REMINDER ===
+       You have access to: Read, Write, Glob, Grep, WebSearch, WebFetch, Agent, AskUserQuestion.
+       USE THEM. Search the web for relevant info. Spawn sub-agents for parallel research.
+       Don't just theorize — investigate and cite evidence.
        ```
 
 ### Stance Definitions (injected into participant prompts)
@@ -327,18 +332,12 @@ Blueprint format:
      ```
    - **If new session**: Use standard format
 5. **If blueprint has `action_required: true`**:
-   Use `AskUserQuestion` to present implementation options:
-
-   **Options:**
-   - **"Approve Plan (with tool permissions)"** → The blueprint IS the plan — no re-planning needed. Chair writes `council/blueprint.md` to the plan file path, then calls `ExitPlanMode` with `allowedPrompts` derived from blueprint scope. The user gets the standard plan-approval UX: review the plan, approve/reject, clear context, and auto-accept controls.
-   - **"Implement Immediately"** → Execute blueprint directly without plan approval. Read `council/blueprint.md` and implement based on scope/constraints/verification.
-   - **"Let me write"** → Stop and let the user take control of implementation.
+   - Call `EnterPlanMode` to enter plan mode
+   - Write `council/blueprint.md` contents to the plan file path (provided in the plan mode system message)
+   - Call `ExitPlanMode` with `allowedPrompts` derived from blueprint scope
+   - The user gets the standard plan-approval UX: approve/reject, clear context, auto-accept controls, and granular Bash permissions
 
    **`allowedPrompts` derivation**: If the blueprint scope includes shell scripts or commands to run, include `{"tool": "Bash", "prompt": "run shell scripts"}`. If it includes test verification steps, include `{"tool": "Bash", "prompt": "run tests"}`. Always include prompts matching the blueprint's verification section.
-
-   > **Note:** "Approve Plan" calls `ExitPlanMode`, which gives the user the same controls as any plan-mode exit: clear context, auto-accept edits, and granular Bash permissions. This replaces the old `EnterPlanMode` option which redundantly started a new planning cycle.
-
-   Handle each choice accordingly. Do NOT halt on any valid selection.
 
 ## Important Notes
 - Preserve each participant's COUNCIL_RESPONSE block verbatim - never paraphrase
@@ -347,7 +346,7 @@ Blueprint format:
 - Goal: Better decisions through diverse perspectives
 - You are Chair - maintain neutrality when summarizing
 - **ALWAYS paste each participant's full response as text** - tool outputs get truncated
-- **For actionable blueprints**: Present three options (plan approval with permissions / implement immediately / let user write)
+- **For actionable blueprints**: Auto-enter plan mode, save blueprint as plan, call ExitPlanMode with permissions
 - **Participants are spawned ONCE** at session start and messaged each round — do NOT re-spawn per round
 - **Parallel within a round**: all participants write position files independently. No participant sees another's current-round position until the Chair compiles `round-N.md`.
 - **File-based data, signal-based coordination**: Participants write positions to `{persona}-round-{N}.md`, then send `POSITION_WRITTEN` signal. Chair sends `ROUND_COMPLETE` with path. Messages carry signals only — never position content.

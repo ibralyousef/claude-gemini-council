@@ -493,3 +493,17 @@ Each entry follows this structure:
 - **Rationale**: User mandated file-based communication as hard requirement. Architecture cleanly separates data plane (files) from control plane (messages). Chair remains single authoritative writer of round files (Immutability Mandate preserved). File-based offers advantages: no message size limits, inspectable during round, debuggable post-mortem.
 - **Dissent**: None — full consensus in 3 rounds (confidence range 0.88-0.92)
 - **Session**: council/sessions/2026-03-07-011500/
+
+## 2026-03-07 - Amendment: Keep compile-round.sh (User Override)
+- **Amends**: 2026-03-07 "File-Based Agent Communication Protocol" — item 2 ("No separate concatenation script")
+- **Topic**: should the compile-round.sh script be kept or replaced with inline Chair logic
+- **Stance**: critical
+- **Decision**: Keep compile-round.sh. User explicitly overrode the "no separate concatenation script" anti-pattern with a technically valid rationale.
+- **User Rationale**: "saves context, prevents hallucination" — `cat` copies bytes verbatim; LLM-mediated inline composition is probabilistic and could subtly mangle participant positions, violating the Immutability Mandate.
+- **Changes**:
+  1. **Keep the script** as the round compilation mechanism — `cat` mechanically enforces verbatim fidelity
+  2. **Remove `rm -f` cleanup from the script** — make it a pure function (assemble only, no side effects); Chair handles deletion after Read-back verification
+  3. **Document the script's contract** in council.md Phase 3e (inputs, outputs, fidelity guarantee, bash 3.2 portability)
+- **Rationale**: The script sidesteps LLM-mediated content handling for verbatim positions — the same class of problem that prompted the Immutability Mandate. `cat` is deterministic; inline Write is not.
+- **Dissent**: None — full consensus in 3 rounds (all RESOLVED at 0.88 confidence)
+- **Session**: council/sessions/2026-03-07-012000/
