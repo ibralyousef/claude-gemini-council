@@ -7,6 +7,7 @@ Collaborative planning using Claude Code agent teams.
 - `/council -a 5 <topic>` - Adversarial, max 5 rounds
 - `/council -n 3 <topic>` - 3 participants
 - `/council -n 4 -a <topic>` - 4 adversarial participants
+- `/council -i <topic>` - Interactive mode (user input after each round)
 - `/council-agenda list` - View strategic agenda
 
 ## Stances

@@ -1,7 +1,7 @@
 ---
 description: "Start AI Council session with agent team for collaborative planning"
 allowed-tools: ["Read", "Write", "Glob", "Grep", "Bash", "AskUserQuestion", "ExitPlanMode", "TeamCreate", "TeamDelete", "SendMessage", "Task"]
-argument-hint: "[--resume <session>] [-n N] [-c|-a] [N] <topic>"
+argument-hint: "[--resume <session>] [-n N] [-c|-a] [-i] [N] <topic>"
 ---
 
 # AI Council Session
@@ -13,8 +13,9 @@ Parse in order:
 1. `--resume <session>` (optional): Resume an archived session. Provide path (e.g., `council/sessions/2025-12-18-120000/`) or session ID (e.g., `2025-12-18-120000`). Topic is inherited; other flags can override stance/rounds/agents.
 2. `-n N` / `--agents N` (optional): Number of participants, 1-5 (default: 2)
 3. Stance (optional): `-c`/`critical` | `-a`/`adversarial` (default: critical)
-4. Max rounds (optional): Number 1-10 (default: 10). Session exits early on RESOLVED.
-5. Topic (required unless --resume): Everything else
+4. `-i` / `--interactive` (optional): Interactive mode — Chair asks user for input after every round
+5. Max rounds (optional): Number 1-10 (default: 10). Session exits early on RESOLVED.
+6. Topic (required unless --resume): Everything else
 
 > **No arguments?** If invoked without a topic (and without `--resume`), the council will display your strategic agenda. Use `/council-agenda add` to queue topics.
 
@@ -28,6 +29,8 @@ Parse in order:
 - `/council -n 4 -a API migration` → adversarial, max 10 rounds, 4 participants
 - `/council --resume 2025-12-18-120000` → resume session, inherit topic
 - `/council --resume 2025-12-18-120000 -a` → resume with adversarial stance
+- `/council -i API design review` → critical, interactive, max 10 rounds, 2 participants
+- `/council -n 3 -a -i 5 Monorepo vs polyrepo` → adversarial, interactive, max 5 rounds, 3 participants
 - `/council` → (no args) display strategic agenda
 
 ## Stances
@@ -77,6 +80,7 @@ Note: All paths are relative to the current working directory. Ensure you're in 
      ## Topic: [topic]
      ## Stance: [stance]
      ## Mode: Consensus (max [N] rounds)
+     ## Interactive: [yes|no]
      ## Participants: N ([persona-1], ...)
      ```
 
@@ -179,6 +183,7 @@ STANCE: Adversarial (Devil's Advocate)
 Topic: [topic]
 Stance: [stance]
 Mode: Consensus (max [N] rounds)
+Interactive: [yes|no]
 Participants: [N] ([persona-1], [persona-2], ...)
 ```
 
@@ -242,8 +247,25 @@ This is mandatory because tool outputs get truncated and require ctrl+o to view.
 - `RESOLVED` → end loop, go to summary
 - Otherwise → `CONTINUE` to next round
 
-**h. Contextual user input** (IF status is CONTINUE AND no previous `[user declined further input]` found in any round file):
-The Chair MUST use `AskUserQuestion` when ANY of these mandatory triggers fire:
+**h. User input** (IF status is CONTINUE):
+
+**If interactive mode (`-i`) is active AND no previous `[user declined further input]` found in any round file:**
+   Use `AskUserQuestion` unconditionally with:
+   - Question: "Round [N] complete. [1-2 sentence summary of key convergence/divergence]. Any guidance, corrections, or new context for the next round?"
+   - Options: ["Continue without input", "Stop asking for this session"]
+   - (User can always type custom input via "Other")
+
+   **Handle response:**
+   - If "Continue without input": Set USER_INPUT to `[user passed]` for next round. Do not append to round file.
+   - If "Stop asking for this session": Log `[user declined further input]` in next round's Chair position; revert to trigger-based input (standard behavior below) for remainder of session. Set USER_INPUT to `[user declined interactive input]`
+   - Otherwise: Set USER_INPUT to user's actual response. **Append to round file** via Edit (after the synthesis section):
+     ```
+     ## USER INPUT
+     [exact user response, verbatim]
+     ```
+
+**If NOT interactive mode (standard behavior) AND no previous `[user declined further input]` found in any round file:**
+   The Chair MUST use `AskUserQuestion` when ANY of these mandatory triggers fire:
    1. **User-directed question**: Any participant's COUNCIL_RESPONSE contains a QUESTIONS_FOR_OTHER entry directed at the user
    2. **Persistent disagreement**: Participants with contradicting KEY_POINTS show no change in AGREEMENT values between round N-1 and round N
    3. **Low confidence**: Any participant reports confidence < 0.5 AND MISSING_CONTEXT is non-empty
@@ -331,7 +353,8 @@ Blueprint format:
      ...
      ```
    - **If new session**: Use standard format
-5. **If blueprint has `action_required: true`**:
+5. **If blueprint has `Action Required: true`**:
+   **CRITICAL — DO NOT SKIP**: You MUST enter plan mode for actionable blueprints.
    - Call `EnterPlanMode` to enter plan mode
    - Write `council/blueprint.md` contents to the plan file path (provided in the plan mode system message)
    - Call `ExitPlanMode` with `allowedPrompts` derived from blueprint scope
@@ -346,12 +369,13 @@ Blueprint format:
 - Goal: Better decisions through diverse perspectives
 - You are Chair - maintain neutrality when summarizing
 - **ALWAYS paste each participant's full response as text** - tool outputs get truncated
-- **For actionable blueprints**: Auto-enter plan mode, save blueprint as plan, call ExitPlanMode with permissions
+- **MANDATORY for actionable blueprints**: If `Action Required: true`, you MUST call `EnterPlanMode` → write blueprint to plan file → call `ExitPlanMode` with permissions. Do NOT skip this step or proceed to implement without plan-mode approval.
 - **Participants are spawned ONCE** at session start and messaged each round — do NOT re-spawn per round
 - **Parallel within a round**: all participants write position files independently. No participant sees another's current-round position until the Chair compiles `round-N.md`.
 - **File-based data, signal-based coordination**: Participants write positions to `{persona}-round-{N}.md`, then send `POSITION_WRITTEN` signal. Chair sends `ROUND_COMPLETE` with path. Messages carry signals only — never position content.
 - **Pull not push**: Participants MUST read `council/sessions/current/round-{N-1}.md` for prior positions. Round files are the authoritative record.
 - **Signal vocabulary**: `POSITION_WRITTEN` (agent->Chair), `ROUND_COMPLETE: [path]` (Chair->agent), `USER_INPUT_NEEDED: [question]` (agent->Chair), `RESOLVED` (agent->Chair)
+- **Interactive mode (`-i`)**: Asks user for input after every round synthesis. User can opt out mid-session via "Stop asking" (reverts to standard trigger-based input). User input is appended to the round file as `## USER INPUT` before signaling agents.
 
 ## Immutability Mandate
 **CRITICAL**: The Chair MUST NEVER overwrite a `round-N.md` file once written — round files are immutable after atomic write. `summary.md` and `blueprint.md` may be rewritten if Phase 4 needs to update them before finalization. `session.md` is written once at Phase 5 close and never modified.
